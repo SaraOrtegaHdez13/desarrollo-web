@@ -1,0 +1,13 @@
+# Archivos generados por Maven
+backend/target/
+
+# Archivos de configuración locales
+.env
+.env.*
+
+# Cookies y sesiones de prueba
+cookies.txt
+backend/cookies.txt
+
+# Archivos temporales
+*.log
