@@ -2,7 +2,7 @@
 
 **Equipo:** Sara, Lourdes, Aradan
 **Fecha:** 09/11/2026
-**Número de reporte:** 1 
+**Número de reporte:** 1
 **Repositorio GitHub:** https://github.com/SaraOrtegaHdez13/desarrollo-web
 
 \---
@@ -108,4 +108,5 @@
 ## Observaciones adicionales
 
 * Los documentos de diseño están versionados y se actualizan sobre la marcha; endpoints.md tiene un registro de cambios.
+* **Release del hito:** https://github.com/SaraOrtegaHdez13/desarrollo-web/releases/tag/E1
 
