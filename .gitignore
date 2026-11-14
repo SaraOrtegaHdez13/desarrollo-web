@@ -8,6 +8,7 @@ backend/target/
 # Cookies y sesiones de prueba
 cookies.txt
 backend/cookies.txt
+backend/cookies2.txt
 
 # Archivos temporales
 *.log
