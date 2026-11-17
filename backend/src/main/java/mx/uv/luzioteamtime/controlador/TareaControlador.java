@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -65,4 +68,54 @@ public class TareaControlador {
                 .body(error.getMessage());
         }
     }
+
+
+    // B5: Obtener las tareas de un tablero con filtros opcionales
+    @GetMapping("/obtenerTareas/{idTablero}")
+    public ResponseEntity<?> obtenerTareas(
+        @PathVariable Integer idTablero,
+        @RequestParam(required = false) String estado,
+        @RequestParam(required = false) Integer responsable,
+        HttpSession session
+    ) {
+
+        try {
+
+            // Obtener el usuario autenticado
+            Integer idUsuario =
+                (Integer) session.getAttribute("usuarioId");
+
+            if (idUsuario == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Debes iniciar sesión");
+            }
+
+            // Consultar las tareas desde el servicio
+            List<Tarea> tareas = tareaServicio.obtenerTareas(
+                idTablero,
+                idUsuario,
+                estado,
+                responsable
+            );
+
+            // El tablero no existe
+            if (tareas == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Devolver las tareas encontradas
+            return ResponseEntity.ok(tareas);
+
+        } catch (SecurityException error) {
+
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(error.getMessage());
+
+        } catch (IllegalArgumentException error) {
+
+            return ResponseEntity.badRequest()
+                .body(error.getMessage());
+        }
+    }
+
 }

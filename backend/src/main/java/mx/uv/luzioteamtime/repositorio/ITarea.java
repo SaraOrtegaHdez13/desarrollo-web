@@ -15,4 +15,7 @@ public interface ITarea extends CrudRepository<Tarea, Integer> {
         List<String> estados
     );
 
+    // Obtener todas las tareas de un tablero
+    List<Tarea> findByTablero_Id(Integer idTablero);
+
 }

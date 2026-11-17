@@ -181,6 +181,60 @@ public class TareaServicio {
         return tareaGuardada;
     }
 
+
+    // B5: Consultar las tareas de un tablero
+    public List<Tarea> obtenerTareas(
+        Integer idTablero,
+        Integer idUsuario,
+        String estado,
+        Integer idResponsable
+    ) {
+
+        // Buscar el tablero
+        Tablero tablero = itablero.findById(idTablero).orElse(null);
+
+        if (tablero == null) {
+            return null;
+        }
+
+        // Obtener el equipo al que pertenece
+        Integer idEquipo = tablero.getEquipo().getId();
+
+        // Verificar que el usuario pertenezca al equipo
+        MiembroEquipo miembro = imiembroEquipo
+            .findByUsuario_IdAndEquipo_Id(idUsuario, idEquipo);
+
+        if (miembro == null) {
+            throw new SecurityException(
+                "No perteneces a este equipo"
+            );
+        }
+
+        // Consultar las tareas del tablero
+        List<Tarea> tareas = itarea.findByTablero_Id(idTablero);
+
+        // Crear una lista para los resultados
+        List<Tarea> resultado = new java.util.ArrayList<>();
+
+        // Aplicar los filtros solicitados
+        for (Tarea tarea : tareas) {
+
+            if (estado != null && !estado.isBlank()
+                && !tarea.getEstado().equals(estado)) {
+                continue;
+            }
+
+            if (idResponsable != null
+                && !tarea.getResponsable().getId().equals(idResponsable)) {
+                continue;
+            }
+
+            resultado.add(tarea);
+        }
+
+        return resultado;
+    }
+
     
 
 }
