@@ -236,5 +236,32 @@ public class TareaServicio {
     }
 
     
+    // B6: Obtener una tarea por su ID
+    public Tarea obtenerTarea(Integer idTarea, Integer idUsuario) {
+
+        // Buscar la tarea
+        Tarea tarea = itarea.findById(idTarea).orElse(null);
+
+        if (tarea == null) {
+            return null;
+        }
+
+        // Identificar el equipo al que pertenece la tarea
+        Integer idEquipo = tarea.getTablero().getEquipo().getId();
+
+        // Verificar que el usuario pertenezca al equipo
+        MiembroEquipo miembro = imiembroEquipo
+            .findByUsuario_IdAndEquipo_Id(idUsuario, idEquipo);
+
+        if (miembro == null) {
+            throw new SecurityException(
+                "No perteneces al equipo de esta tarea"
+            );
+        }
+
+        // Devolver la tarea encontrada
+        return tarea;
+    }
+
 
 }

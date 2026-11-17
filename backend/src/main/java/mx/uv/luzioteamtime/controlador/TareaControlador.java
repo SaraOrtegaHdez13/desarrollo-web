@@ -17,6 +17,8 @@ import jakarta.servlet.http.HttpSession;
 import mx.uv.luzioteamtime.modelo.Tarea;
 import mx.uv.luzioteamtime.modelo.TareaRegistro;
 import mx.uv.luzioteamtime.servicio.TareaServicio;
+import java.util.ArrayList;
+import mx.uv.luzioteamtime.modelo.TareaResumen;
 
 @RestController
 public class TareaControlador {
@@ -103,8 +105,14 @@ public class TareaControlador {
                 return ResponseEntity.notFound().build();
             }
 
-            // Devolver las tareas encontradas
-            return ResponseEntity.ok(tareas);
+            // Convertir las tareas a datos sencillos para el frontend
+            List<TareaResumen> resumenes = new ArrayList<>();
+
+            for (Tarea tarea : tareas) {
+                resumenes.add(new TareaResumen(tarea));
+            }
+
+            return ResponseEntity.ok(resumenes);
 
         } catch (SecurityException error) {
 
@@ -117,5 +125,53 @@ public class TareaControlador {
                 .body(error.getMessage());
         }
     }
+
+
+    // B6: Obtener una tarea por su ID
+    @GetMapping("/obtenerTarea/{id}")
+    public ResponseEntity<?> obtenerTarea(
+        @PathVariable Integer id,
+        HttpSession session
+    ) {
+
+        try {
+
+            // Obtener el usuario autenticado
+            Integer idUsuario =
+                (Integer) session.getAttribute("usuarioId");
+
+            if (idUsuario == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Debes iniciar sesión");
+            }
+
+            // Consultar la tarea desde el servicio
+            Tarea tarea = tareaServicio.obtenerTarea(
+                id,
+                idUsuario
+            );
+
+            // La tarea no existe
+            if (tarea == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Convertir la tarea a una respuesta sencilla
+            TareaResumen resumen = new TareaResumen(tarea);
+
+            return ResponseEntity.ok(resumen);
+
+        } catch (SecurityException error) {
+
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(error.getMessage());
+
+        } catch (IllegalArgumentException error) {
+
+            return ResponseEntity.badRequest()
+                .body(error.getMessage());
+        }
+    }
+
 
 }
