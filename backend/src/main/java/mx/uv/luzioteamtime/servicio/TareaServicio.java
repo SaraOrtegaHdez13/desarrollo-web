@@ -22,6 +22,7 @@ import mx.uv.luzioteamtime.modelo.Usuario;
 import mx.uv.luzioteamtime.modelo.MiembroEquipo;
 
 import mx.uv.luzioteamtime.repositorio.ISesion;
+import mx.uv.luzioteamtime.modelo.RevisionTarea;
 import mx.uv.luzioteamtime.repositorio.IRevisionTarea;
 
 @Service
@@ -451,5 +452,71 @@ public class TareaServicio {
         return itarea.save(tarea);
     }
 
+
+    // B10: Enviar una tarea a revisión
+    @Transactional
+    public Tarea enviarTareaRevision(
+        Integer idTarea,
+        Integer idUsuario
+    ) {
+
+        // Buscar la tarea
+        Tarea tarea = itarea.findById(idTarea).orElse(null);
+
+        if (tarea == null) {
+            return null;
+        }
+
+        // Comprobar que el usuario sea el responsable
+        if (idUsuario == null ||
+            !idUsuario.equals(tarea.getResponsable().getId())) {
+
+            throw new SecurityException(
+                "Solo el responsable puede enviar esta tarea a revisión"
+            );
+        }
+
+        // Comprobar que el equipo no esté archivado
+        if (Boolean.TRUE.equals(
+            tarea.getTablero().getEquipo().getArchivado()
+        )) {
+            throw new SecurityException(
+                "No se pueden entregar tareas de equipos archivados"
+            );
+        }
+
+        // La tarea debe estar en progreso
+        if (!"EN_PROGRESO".equals(tarea.getEstado())) {
+            throw new IllegalArgumentException(
+                "Solo se pueden enviar tareas EN_PROGRESO"
+            );
+        }
+
+        // Buscar al usuario que realiza la entrega
+        Usuario usuario = iusuario.findById(idUsuario).orElse(null);
+
+        if (usuario == null) {
+            throw new IllegalArgumentException(
+                "El usuario no existe"
+            );
+        }
+
+        // Cambiar el estado de la tarea
+        tarea.setEstado("EN_REVISION");
+        Tarea tareaGuardada = itarea.save(tarea);
+
+        // Registrar la entrega en el historial
+        RevisionTarea revision = new RevisionTarea(
+            tareaGuardada,
+            usuario,
+            "ENTREGA",
+            null,
+            LocalDateTime.now()
+        );
+
+        irevisionTarea.save(revision);
+
+        return tareaGuardada;
+    }
 
 }
