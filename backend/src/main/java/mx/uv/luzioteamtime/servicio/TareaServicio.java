@@ -21,6 +21,9 @@ import mx.uv.luzioteamtime.modelo.Tarea;
 import mx.uv.luzioteamtime.modelo.Usuario;
 import mx.uv.luzioteamtime.modelo.MiembroEquipo;
 
+import mx.uv.luzioteamtime.repositorio.ISesion;
+import mx.uv.luzioteamtime.repositorio.IRevisionTarea;
+
 @Service
 public class TareaServicio {
 
@@ -38,6 +41,12 @@ public class TareaServicio {
 
     @Autowired
     private IAsignacionTarea iasignacionTarea;
+
+    @Autowired
+    private ISesion isesion;
+
+    @Autowired
+    private IRevisionTarea irevisionTarea;
 
     // B4: Crear una tarea en un tablero
     // Guardar la tarea y su asignación como una sola operación
@@ -332,6 +341,72 @@ public class TareaServicio {
         return itarea.save(tarea);
     }
 
+
+    // B8: Eliminar una tarea si cumple todas las condiciones
+    @Transactional
+    public boolean eliminarTarea(Integer idTarea, Integer idUsuario) {
+
+        // Buscar la tarea
+        Tarea tarea = itarea.findById(idTarea).orElse(null);
+
+        if (tarea == null) {
+            return false;
+        }
+
+        // Obtener el equipo de la tarea
+        Integer idEquipo = tarea.getTablero().getEquipo().getId();
+
+        // Verificar que el usuario sea líder
+        MiembroEquipo miembro = imiembroEquipo
+            .findByUsuario_IdAndEquipo_Id(idUsuario, idEquipo);
+
+        if (miembro == null || !"LIDER".equals(miembro.getRol())) {
+            throw new SecurityException(
+                "Solo un líder puede eliminar tareas"
+            );
+        }
+
+        // Verificar que el equipo no esté archivado
+        if (Boolean.TRUE.equals(
+            tarea.getTablero().getEquipo().getArchivado()
+        )) {
+            throw new SecurityException(
+                "No se pueden eliminar tareas de equipos archivados"
+            );
+        }
+
+        // Solo se pueden eliminar tareas POR_HACER
+        if (!"POR_HACER".equals(tarea.getEstado())) {
+            throw new IllegalArgumentException(
+                "Solo se pueden eliminar tareas POR_HACER"
+            );
+        }
+
+        // Comprobar que no existan sesiones de pomodoro
+        if (isesion.countByTarea_Id(idTarea) > 0) {
+            throw new IllegalArgumentException(
+                "La tarea tiene sesiones de pomodoro registradas"
+            );
+        }
+
+        // Comprobar que no existan revisiones
+        if (irevisionTarea.countByTarea_Id(idTarea) > 0) {
+            throw new IllegalArgumentException(
+                "La tarea tiene historial de revisiones"
+            );
+        }
+
+        // Eliminar las asignaciones relacionadas
+        List<AsignacionTarea> asignaciones =
+            iasignacionTarea.findByTarea_Id(idTarea);
+
+        iasignacionTarea.deleteAll(asignaciones);
+
+        // Eliminar la tarea
+        itarea.delete(tarea);
+
+        return true;
+    }
 
 
 }

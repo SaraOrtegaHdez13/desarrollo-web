@@ -21,6 +21,7 @@ import mx.uv.luzioteamtime.modelo.TareaRegistro;
 import mx.uv.luzioteamtime.servicio.TareaServicio;
 import java.util.ArrayList;
 import mx.uv.luzioteamtime.modelo.TareaResumen;
+import org.springframework.web.bind.annotation.DeleteMapping;
 
 @RestController
 public class TareaControlador {
@@ -213,6 +214,51 @@ public class TareaControlador {
             TareaResumen resumen = new TareaResumen(tarea);
 
             return ResponseEntity.ok(resumen);
+
+        } catch (SecurityException error) {
+
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(error.getMessage());
+
+        } catch (IllegalArgumentException error) {
+
+            return ResponseEntity.badRequest()
+                .body(error.getMessage());
+        }
+    }
+
+
+    // B8: Eliminar una tarea
+    @DeleteMapping("/eliminarTarea/{id}")
+    public ResponseEntity<?> eliminarTarea(
+        @PathVariable Integer id,
+        HttpSession session
+    ) {
+
+        try {
+
+            // Obtener el usuario autenticado
+            Integer idUsuario =
+                (Integer) session.getAttribute("usuarioId");
+
+            if (idUsuario == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Debes iniciar sesión");
+            }
+
+            // Solicitar la eliminación al servicio
+            boolean eliminada = tareaServicio.eliminarTarea(
+                id,
+                idUsuario
+            );
+
+            if (!eliminada) {
+                return ResponseEntity.notFound().build();
+            }
+
+            return ResponseEntity.ok(
+                "Tarea eliminada correctamente"
+            );
 
         } catch (SecurityException error) {
 
