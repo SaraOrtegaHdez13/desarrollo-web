@@ -699,5 +699,184 @@ public class TareaServicio {
         return tareaGuardada;
     }
 
+    // B13: Reasignar una tarea conservando su historial
+    @Transactional
+    public Tarea reasignarTarea(
+        Integer idTarea,
+        Integer idUsuario,
+        Integer idNuevoResponsable
+    ) {
+
+        // Buscar la tarea
+        Tarea tarea = itarea.findById(idTarea).orElse(null);
+
+        if (tarea == null) {
+            return null;
+        }
+
+        // Comprobar que exista una sesión válida
+        if (idUsuario == null) {
+            throw new SecurityException(
+                "Debes iniciar sesión"
+            );
+        }
+
+        Integer idEquipo = tarea.getTablero().getEquipo().getId();
+
+        // Solo un líder del equipo puede reasignar
+        MiembroEquipo lider = imiembroEquipo
+            .findByUsuario_IdAndEquipo_Id(idUsuario, idEquipo);
+
+        if (lider == null || !"LIDER".equals(lider.getRol())) {
+            throw new SecurityException(
+                "Solo un líder puede reasignar tareas"
+            );
+        }
+
+        // El equipo debe estar activo
+        if (Boolean.TRUE.equals(
+            tarea.getTablero().getEquipo().getArchivado()
+        )) {
+            throw new SecurityException(
+                "No se pueden reasignar tareas de equipos archivados"
+            );
+        }
+
+        // Solo permitir reasignar antes de la revisión
+        if (!"POR_HACER".equals(tarea.getEstado()) &&
+            !"EN_PROGRESO".equals(tarea.getEstado())) {
+
+            throw new IllegalArgumentException(
+                "Solo se pueden reasignar tareas POR_HACER o EN_PROGRESO"
+            );
+        }
+
+        if (idNuevoResponsable == null) {
+            throw new IllegalArgumentException(
+                "Debes indicar un nuevo responsable"
+            );
+        }
+
+        // Evitar asignar la tarea al mismo usuario
+        if (idNuevoResponsable.equals(
+            tarea.getResponsable().getId()
+        )) {
+            throw new IllegalArgumentException(
+                "La tarea ya pertenece a ese usuario"
+            );
+        }
+
+        // Comprobar que el nuevo responsable sea miembro
+        MiembroEquipo nuevoMiembro = imiembroEquipo
+            .findByUsuario_IdAndEquipo_Id(
+                idNuevoResponsable,
+                idEquipo
+            );
+
+        if (nuevoMiembro == null) {
+            throw new IllegalArgumentException(
+                "El nuevo responsable no pertenece al equipo"
+            );
+        }
+
+        // Buscar al nuevo responsable
+        Usuario nuevoResponsable = iusuario
+            .findById(idNuevoResponsable)
+            .orElse(null);
+
+        if (nuevoResponsable == null) {
+            throw new IllegalArgumentException(
+                "El nuevo responsable no existe"
+            );
+        }
+
+        // Si el nuevo responsable es líder,
+        // debe existir otro líder para revisar su trabajo
+        if ("LIDER".equals(nuevoMiembro.getRol())) {
+
+            boolean hayOtroLider = false;
+
+            Iterable<MiembroEquipo> miembros =
+                imiembroEquipo.findAll();
+
+            for (MiembroEquipo miembro : miembros) {
+
+                if (miembro.getEquipo().getId().equals(idEquipo) &&
+                    "LIDER".equals(miembro.getRol()) &&
+                    !miembro.getUsuario().getId()
+                        .equals(idNuevoResponsable)) {
+
+                    hayOtroLider = true;
+                    break;
+                }
+            }
+
+            if (!hayOtroLider) {
+                throw new IllegalArgumentException(
+                    "Debe existir otro líder para revisar esta tarea"
+                );
+            }
+        }
+
+        // Buscar el historial de asignaciones
+        List<AsignacionTarea> asignaciones =
+            iasignacionTarea.findByTarea_Id(idTarea);
+
+        AsignacionTarea asignacionActual = null;
+
+        // La asignación vigente no tiene fecha de fin
+        for (AsignacionTarea asignacion : asignaciones) {
+
+            if (asignacion.getFechaFin() == null) {
+
+                if (asignacionActual != null) {
+                    throw new IllegalStateException(
+                        "La tarea tiene varias asignaciones activas"
+                    );
+                }
+
+                asignacionActual = asignacion;
+            }
+        }
+
+        // Evitar perder el historial si falta la asignación vigente
+        if (asignacionActual == null) {
+            throw new IllegalStateException(
+                "La tarea no tiene una asignación activa"
+            );
+        }
+
+        LocalDateTime fecha = LocalDateTime.now();
+
+        // Cerrar la asignación anterior
+        asignacionActual.setFechaFin(fecha);
+        asignacionActual.setEstadoAlSalir(tarea.getEstado());
+
+        iasignacionTarea.save(asignacionActual);
+
+        // Actualizar el responsable de la tarea
+        tarea.setResponsable(nuevoResponsable);
+
+        // Reiniciar el trabajo para el nuevo responsable
+        tarea.setEstado("POR_HACER");
+        tarea.setObservacion(null);
+        tarea.setFechaCompletada(null);
+
+        Tarea tareaGuardada = itarea.save(tarea);
+
+        // Crear la nueva asignación
+        AsignacionTarea nuevaAsignacion = new AsignacionTarea(
+            tareaGuardada,
+            nuevoResponsable,
+            fecha,
+            null,
+            "POR_HACER",
+            null
+        );
+
+        iasignacionTarea.save(nuevaAsignacion);
+
+        return tareaGuardada;
+    }
 
 }

@@ -21,6 +21,7 @@ import mx.uv.luzioteamtime.modelo.Tarea;
 import mx.uv.luzioteamtime.modelo.TareaRegistro;
 import mx.uv.luzioteamtime.servicio.TareaServicio;
 import mx.uv.luzioteamtime.modelo.TareaRechazo;
+import mx.uv.luzioteamtime.modelo.TareaReasignacion;
 import mx.uv.luzioteamtime.modelo.TareaResumen;
 import org.springframework.web.bind.annotation.DeleteMapping;
 
@@ -464,6 +465,64 @@ public class TareaControlador {
                 .body(error.getMessage());
 
         } catch (IllegalArgumentException error) {
+
+            return ResponseEntity.badRequest()
+                .body(error.getMessage());
+        }
+    }
+
+
+    // B13: Reasignar una tarea
+    @PutMapping("/reasignarTarea/{id}")
+    public ResponseEntity<?> reasignarTarea(
+        @PathVariable Integer id,
+        @RequestBody TareaReasignacion datos,
+        HttpSession session
+    ) {
+
+        try {
+
+            // Obtener el usuario autenticado
+            Integer idUsuario =
+                (Integer) session.getAttribute("usuarioId");
+
+            if (idUsuario == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Debes iniciar sesión");
+            }
+
+            // Comprobar que se hayan enviado los datos
+            if (datos == null) {
+                return ResponseEntity.badRequest()
+                    .body("Debes indicar el nuevo responsable");
+            }
+
+            // Solicitar la reasignación al servicio
+            Tarea tarea = tareaServicio.reasignarTarea(
+                id,
+                idUsuario,
+                datos.getIdResponsable()
+            );
+
+            if (tarea == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            return ResponseEntity.ok(
+                new TareaResumen(tarea)
+            );
+
+        } catch (SecurityException error) {
+
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(error.getMessage());
+
+        } catch (IllegalArgumentException error) {
+
+            return ResponseEntity.badRequest()
+                .body(error.getMessage());
+
+        } catch (IllegalStateException error) {
 
             return ResponseEntity.badRequest()
                 .body(error.getMessage());
