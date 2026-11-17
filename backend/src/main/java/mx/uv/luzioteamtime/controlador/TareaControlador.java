@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PutMapping;
+import mx.uv.luzioteamtime.modelo.TareaModificacion;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -157,6 +159,57 @@ public class TareaControlador {
             }
 
             // Convertir la tarea a una respuesta sencilla
+            TareaResumen resumen = new TareaResumen(tarea);
+
+            return ResponseEntity.ok(resumen);
+
+        } catch (SecurityException error) {
+
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(error.getMessage());
+
+        } catch (IllegalArgumentException error) {
+
+            return ResponseEntity.badRequest()
+                .body(error.getMessage());
+        }
+    }
+
+
+    // B7: Modificar los datos de una tarea
+    @PutMapping("/modificarTarea/{id}")
+    public ResponseEntity<?> modificarTarea(
+        @PathVariable Integer id,
+        @RequestBody TareaModificacion datos,
+        HttpSession session
+    ) {
+
+        try {
+
+            // Obtener el usuario autenticado
+            Integer idUsuario =
+                (Integer) session.getAttribute("usuarioId");
+
+            if (idUsuario == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Debes iniciar sesión");
+            }
+
+            // Solicitar la modificación al servicio
+            Tarea tarea = tareaServicio.modificarTarea(
+                id,
+                idUsuario,
+                datos.getTitulo(),
+                datos.getDescripcion(),
+                datos.getFechaLimite()
+            );
+
+            // La tarea no existe
+            if (tarea == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Devolver los datos actualizados
             TareaResumen resumen = new TareaResumen(tarea);
 
             return ResponseEntity.ok(resumen);

@@ -264,4 +264,74 @@ public class TareaServicio {
     }
 
 
+    // B7: Modificar los datos de una tarea
+    public Tarea modificarTarea(
+        Integer idTarea,
+        Integer idUsuario,
+        String titulo,
+        String descripcion,
+        LocalDate fechaLimite
+    ) {
+
+        // Buscar la tarea
+        Tarea tarea = itarea.findById(idTarea).orElse(null);
+
+        if (tarea == null) {
+            return null;
+        }
+
+        // Obtener el equipo de la tarea
+        Integer idEquipo = tarea.getTablero().getEquipo().getId();
+
+        // Verificar que el usuario sea líder
+        MiembroEquipo miembro = imiembroEquipo
+            .findByUsuario_IdAndEquipo_Id(idUsuario, idEquipo);
+
+        if (miembro == null || !"LIDER".equals(miembro.getRol())) {
+            throw new SecurityException(
+                "Solo un líder puede modificar tareas"
+            );
+        }
+
+        // No modificar tareas de equipos archivados
+        if (Boolean.TRUE.equals(
+            tarea.getTablero().getEquipo().getArchivado()
+        )) {
+            throw new SecurityException(
+                "El equipo está archivado"
+            );
+        }
+
+        // No modificar tareas en revisión o terminadas
+        if ("EN_REVISION".equals(tarea.getEstado())
+            || "HECHA".equals(tarea.getEstado())) {
+            throw new IllegalArgumentException(
+                "No se puede modificar una tarea en revisión o terminada"
+            );
+        }
+
+        // Validar el título
+        if (titulo == null || titulo.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                "El título es obligatorio"
+            );
+        }
+
+        if (titulo.trim().length() > 100) {
+            throw new IllegalArgumentException(
+                "El título no puede superar 100 caracteres"
+            );
+        }
+
+        // Actualizar los datos permitidos
+        tarea.setTitulo(titulo.trim());
+        tarea.setDescripcion(descripcion);
+        tarea.setFechaLimite(fechaLimite);
+
+        // Guardar los cambios
+        return itarea.save(tarea);
+    }
+
+
+
 }
