@@ -519,4 +519,86 @@ public class TareaServicio {
         return tareaGuardada;
     }
 
+
+    // B11: Aprobar una tarea enviada a revisión
+    @Transactional
+    public Tarea aprobarTarea(Integer idTarea, Integer idUsuario) {
+
+        // Buscar la tarea
+        Tarea tarea = itarea.findById(idTarea).orElse(null);
+
+        if (tarea == null) {
+            return null;
+        }
+
+        // Obtener el equipo de la tarea
+        Integer idEquipo = tarea.getTablero().getEquipo().getId();
+
+        // Comprobar que el usuario sea líder del equipo
+        MiembroEquipo miembro = imiembroEquipo
+            .findByUsuario_IdAndEquipo_Id(idUsuario, idEquipo);
+
+        if (miembro == null || !"LIDER".equals(miembro.getRol())) {
+            throw new SecurityException(
+                "Solo un líder puede aprobar tareas"
+            );
+        }
+
+        // Comprobar que el equipo no esté archivado
+        if (Boolean.TRUE.equals(
+            tarea.getTablero().getEquipo().getArchivado()
+        )) {
+            throw new SecurityException(
+                "No se pueden aprobar tareas de equipos archivados"
+            );
+        }
+
+        // Impedir que el líder apruebe su propia tarea
+        if (idUsuario.equals(tarea.getResponsable().getId())) {
+            throw new SecurityException(
+                "No puedes aprobar una tarea asignada a ti mismo"
+            );
+        }
+
+        // La tarea debe estar en revisión
+        if (!"EN_REVISION".equals(tarea.getEstado())) {
+            throw new IllegalArgumentException(
+                "Solo se pueden aprobar tareas EN_REVISION"
+            );
+        }
+
+        // Obtener al usuario que aprueba
+        Usuario usuario = iusuario.findById(idUsuario).orElse(null);
+
+        if (usuario == null) {
+            throw new IllegalArgumentException(
+                "El usuario no existe"
+            );
+        }
+
+        // Registrar la fecha de aprobación
+        LocalDateTime fecha = LocalDateTime.now();
+
+        // Marcar la tarea como terminada
+        tarea.setEstado("HECHA");
+        tarea.setFechaCompletada(fecha);
+        tarea.setObservacion(null);
+
+        Tarea tareaGuardada = itarea.save(tarea);
+
+        // Guardar la aprobación en el historial
+        RevisionTarea revision = new RevisionTarea(
+            tareaGuardada,
+            usuario,
+            "APROBACION",
+            null,
+            fecha
+        );
+
+        irevisionTarea.save(revision);
+
+        return tareaGuardada;
+    }
+
+
 }
