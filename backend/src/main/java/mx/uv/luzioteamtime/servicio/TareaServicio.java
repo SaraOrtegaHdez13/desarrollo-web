@@ -408,5 +408,48 @@ public class TareaServicio {
         return true;
     }
 
+    
+    // B9: Iniciar una tarea asignada al usuario
+    public Tarea iniciarTarea(Integer idTarea, Integer idUsuario) {
+
+        // Buscar la tarea
+        Tarea tarea = itarea.findById(idTarea).orElse(null);
+
+        if (tarea == null) {
+            return null;
+        }
+
+        // Comprobar que el equipo no esté archivado
+        if (Boolean.TRUE.equals(
+            tarea.getTablero().getEquipo().getArchivado()
+        )) {
+            throw new SecurityException(
+                "No se pueden iniciar tareas de equipos archivados"
+            );
+        }
+
+        // Comprobar que sea el responsable de la tarea
+        if (idUsuario == null ||
+            !idUsuario.equals(tarea.getResponsable().getId())) {
+
+            throw new SecurityException(
+                "Solo el responsable puede iniciar esta tarea"
+            );
+        }
+
+        // Verificar el estado actual
+        if (!"POR_HACER".equals(tarea.getEstado())) {
+            throw new IllegalArgumentException(
+                "Solo se pueden iniciar tareas en estado POR_HACER"
+            );
+        }
+
+        // Cambiar el estado
+        tarea.setEstado("EN_PROGRESO");
+
+        // Guardar el cambio
+        return itarea.save(tarea);
+    }
+
 
 }

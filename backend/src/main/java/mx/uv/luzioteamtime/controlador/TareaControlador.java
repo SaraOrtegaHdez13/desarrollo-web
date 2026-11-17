@@ -273,4 +273,51 @@ public class TareaControlador {
     }
 
 
+    // B9: Iniciar una tarea asignada al usuario
+    @PutMapping("/iniciarTarea/{id}")
+    public ResponseEntity<?> iniciarTarea(
+        @PathVariable Integer id,
+        HttpSession session
+    ) {
+
+        try {
+
+            // Obtener el usuario autenticado
+            Integer idUsuario =
+                (Integer) session.getAttribute("usuarioId");
+
+            if (idUsuario == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Debes iniciar sesión");
+            }
+
+            // Solicitar el cambio de estado al servicio
+            Tarea tarea = tareaServicio.iniciarTarea(
+                id,
+                idUsuario
+            );
+
+            // La tarea no existe
+            if (tarea == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Devolver la tarea con su nuevo estado
+            TareaResumen resumen = new TareaResumen(tarea);
+
+            return ResponseEntity.ok(resumen);
+
+        } catch (SecurityException error) {
+
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(error.getMessage());
+
+        } catch (IllegalArgumentException error) {
+
+            return ResponseEntity.badRequest()
+                .body(error.getMessage());
+        }
+    }
+
+
 }
