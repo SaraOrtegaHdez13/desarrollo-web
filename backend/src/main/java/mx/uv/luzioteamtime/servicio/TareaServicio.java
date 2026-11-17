@@ -220,6 +220,20 @@ public class TareaServicio {
             );
         }
 
+        // Validar que el estado solicitado sea válido
+        if (estado != null && !estado.isBlank()) {
+
+            if (!estado.equals("POR_HACER") &&
+                !estado.equals("EN_PROGRESO") &&
+                !estado.equals("EN_REVISION") &&
+                !estado.equals("HECHA")) {
+
+                throw new IllegalArgumentException(
+                    "El estado indicado no es válido"
+                );
+            }
+        }
+
         // Consultar las tareas del tablero
         List<Tarea> tareas = itarea.findByTablero_Id(idTablero);
 
