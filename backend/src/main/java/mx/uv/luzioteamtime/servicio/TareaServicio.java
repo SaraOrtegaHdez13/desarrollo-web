@@ -601,4 +601,103 @@ public class TareaServicio {
     }
 
 
+    // B12: Rechazar una tarea y solicitar correcciones
+    @Transactional
+    public Tarea rechazarTarea(
+        Integer idTarea,
+        Integer idUsuario,
+        String observacion
+    ) {
+
+        // Buscar la tarea
+        Tarea tarea = itarea.findById(idTarea).orElse(null);
+
+        if (tarea == null) {
+            return null;
+        }
+
+        // Obtener el equipo de la tarea
+        Integer idEquipo = tarea.getTablero().getEquipo().getId();
+
+        // Comprobar que el usuario sea líder del equipo
+        MiembroEquipo miembro = imiembroEquipo
+            .findByUsuario_IdAndEquipo_Id(idUsuario, idEquipo);
+
+        if (miembro == null || !"LIDER".equals(miembro.getRol())) {
+            throw new SecurityException(
+                "Solo un líder puede rechazar tareas"
+            );
+        }
+
+        // Comprobar que el equipo no esté archivado
+        if (Boolean.TRUE.equals(
+            tarea.getTablero().getEquipo().getArchivado()
+        )) {
+            throw new SecurityException(
+                "No se pueden rechazar tareas de equipos archivados"
+            );
+        }
+
+        // Impedir que el líder revise su propia tarea
+        if (idUsuario.equals(tarea.getResponsable().getId())) {
+            throw new SecurityException(
+                "No puedes rechazar una tarea asignada a ti mismo"
+            );
+        }
+
+        // La tarea debe estar en revisión
+        if (!"EN_REVISION".equals(tarea.getEstado())) {
+            throw new IllegalArgumentException(
+                "Solo se pueden rechazar tareas EN_REVISION"
+            );
+        }
+
+        // La observación es obligatoria
+        if (observacion == null || observacion.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                "Debes escribir una observación"
+            );
+        }
+
+        // La columna de observación permite hasta 255 caracteres
+        if (observacion.trim().length() > 255) {
+            throw new IllegalArgumentException(
+                "La observación no puede superar 255 caracteres"
+            );
+        }
+
+        // Buscar al usuario que rechaza
+        Usuario usuario = iusuario.findById(idUsuario).orElse(null);
+
+        if (usuario == null) {
+            throw new IllegalArgumentException(
+                "El usuario no existe"
+            );
+        }
+
+        // Registrar la fecha del rechazo
+        LocalDateTime fecha = LocalDateTime.now();
+
+        // Devolver la tarea a progreso
+        tarea.setEstado("EN_PROGRESO");
+        tarea.setObservacion(observacion.trim());
+        tarea.setFechaCompletada(null);
+
+        Tarea tareaGuardada = itarea.save(tarea);
+
+        // Guardar el rechazo en el historial
+        RevisionTarea revision = new RevisionTarea(
+            tareaGuardada,
+            usuario,
+            "RECHAZO",
+            observacion.trim(),
+            fecha
+        );
+
+        irevisionTarea.save(revision);
+
+        return tareaGuardada;
+    }
+
+
 }

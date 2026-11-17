@@ -4,6 +4,7 @@ package mx.uv.luzioteamtime.controlador;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import java.util.ArrayList;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,9 +20,10 @@ import jakarta.servlet.http.HttpSession;
 import mx.uv.luzioteamtime.modelo.Tarea;
 import mx.uv.luzioteamtime.modelo.TareaRegistro;
 import mx.uv.luzioteamtime.servicio.TareaServicio;
-import java.util.ArrayList;
+import mx.uv.luzioteamtime.modelo.TareaRechazo;
 import mx.uv.luzioteamtime.modelo.TareaResumen;
 import org.springframework.web.bind.annotation.DeleteMapping;
+
 
 @RestController
 public class TareaControlador {
@@ -397,6 +399,61 @@ public class TareaControlador {
             }
 
             // Devolver la tarea aprobada
+            TareaResumen resumen = new TareaResumen(tarea);
+
+            return ResponseEntity.ok(resumen);
+
+        } catch (SecurityException error) {
+
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(error.getMessage());
+
+        } catch (IllegalArgumentException error) {
+
+            return ResponseEntity.badRequest()
+                .body(error.getMessage());
+        }
+    }
+
+
+    // B12: Rechazar una tarea con observación
+    @PutMapping("/rechazarTarea/{id}")
+    public ResponseEntity<?> rechazarTarea(
+        @PathVariable Integer id,
+        @RequestBody TareaRechazo datos,
+        HttpSession session
+    ) {
+
+        try {
+
+            // Obtener el usuario autenticado
+            Integer idUsuario =
+                (Integer) session.getAttribute("usuarioId");
+
+            if (idUsuario == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Debes iniciar sesión");
+            }
+
+            // Comprobar que se haya recibido la observación
+            if (datos == null) {
+                return ResponseEntity.badRequest()
+                    .body("Debes enviar una observación");
+            }
+
+            // Solicitar el rechazo al servicio
+            Tarea tarea = tareaServicio.rechazarTarea(
+                id,
+                idUsuario,
+                datos.getObservacion()
+            );
+
+            // La tarea no existe
+            if (tarea == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Devolver la tarea con el nuevo estado
             TareaResumen resumen = new TareaResumen(tarea);
 
             return ResponseEntity.ok(resumen);
