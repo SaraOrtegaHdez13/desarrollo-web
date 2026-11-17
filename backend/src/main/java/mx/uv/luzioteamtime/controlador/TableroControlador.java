@@ -59,49 +59,82 @@ public class TableroControlador {
     }
 
     // B1: Crear un tablero dentro de un equipo
-@PostMapping("/crearTablero/{idEquipo}")
-public ResponseEntity<?> crearTablero(
-    @PathVariable Integer idEquipo,
-    @RequestBody TableroResumen datos,
-    HttpSession session
-) {
+    @PostMapping("/crearTablero/{idEquipo}")
+    public ResponseEntity<?> crearTablero(
+        @PathVariable Integer idEquipo,
+        @RequestBody TableroResumen datos,
+        HttpSession session
+    ) {
 
-    try {
+        try {
 
-        // Obtener el usuario de la sesión
-        Integer idUsuario =
-            (Integer) session.getAttribute("usuarioId");
+            // Obtener el usuario de la sesión
+            Integer idUsuario =
+                (Integer) session.getAttribute("usuarioId");
 
-        // Crear el tablero mediante el servicio
-        Tablero tablero = tableroServicio.crearTablero(
-            idEquipo,
-            idUsuario,
-            datos.getNombre()
-        );
+            // Crear el tablero mediante el servicio
+            Tablero tablero = tableroServicio.crearTablero(
+                idEquipo,
+                idUsuario,
+                datos.getNombre()
+            );
 
-        if (tablero == null) {
-            return ResponseEntity.notFound().build();
+            if (tablero == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Devolver los datos del tablero creado
+            TableroResumen resultado = new TableroResumen(
+                tablero.getId(),
+                idEquipo,
+                tablero.getNombre()
+            );
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                .body(resultado);
+
+        } catch (SecurityException error) {
+
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(error.getMessage());
+
+        } catch (IllegalArgumentException error) {
+
+            return ResponseEntity.badRequest()
+                .body(error.getMessage());
         }
-
-        // Devolver los datos del tablero creado
-        TableroResumen resultado = new TableroResumen(
-            tablero.getId(),
-            idEquipo,
-            tablero.getNombre()
-        );
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(resultado);
-
-    } catch (SecurityException error) {
-
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-            .body(error.getMessage());
-
-    } catch (IllegalArgumentException error) {
-
-        return ResponseEntity.badRequest()
-            .body(error.getMessage());
     }
-}
+
+    // B2: Consultar un tablero por su ID
+    @GetMapping("/obtenerTablero/{id}")
+    public ResponseEntity<?> obtenerTablero(
+        @PathVariable Integer id,
+        HttpSession session
+    ) {
+
+        try {
+
+            Integer idUsuario =
+                (Integer) session.getAttribute("usuarioId");
+
+            TableroResumen tablero =
+                tableroServicio.obtenerTablero(id, idUsuario);
+
+            if (tablero == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            return ResponseEntity.ok(tablero);
+
+        } catch (SecurityException error) {
+
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(error.getMessage());
+
+        } catch (IllegalArgumentException error) {
+
+            return ResponseEntity.badRequest()
+                .body(error.getMessage());
+        }
+    }
 }
