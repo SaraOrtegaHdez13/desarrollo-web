@@ -8,10 +8,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
-import jakarta.servlet.http.HttpSession;
-
+import mx.uv.luzioteamtime.modelo.Tablero;
 import mx.uv.luzioteamtime.modelo.TableroResumen;
+import jakarta.servlet.http.HttpSession;
 import mx.uv.luzioteamtime.servicio.TableroServicio;
 
 @RestController
@@ -55,4 +57,51 @@ public class TableroControlador {
                 .body(error.getMessage());
         }
     }
+
+    // B1: Crear un tablero dentro de un equipo
+@PostMapping("/crearTablero/{idEquipo}")
+public ResponseEntity<?> crearTablero(
+    @PathVariable Integer idEquipo,
+    @RequestBody TableroResumen datos,
+    HttpSession session
+) {
+
+    try {
+
+        // Obtener el usuario de la sesión
+        Integer idUsuario =
+            (Integer) session.getAttribute("usuarioId");
+
+        // Crear el tablero mediante el servicio
+        Tablero tablero = tableroServicio.crearTablero(
+            idEquipo,
+            idUsuario,
+            datos.getNombre()
+        );
+
+        if (tablero == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // Devolver los datos del tablero creado
+        TableroResumen resultado = new TableroResumen(
+            tablero.getId(),
+            idEquipo,
+            tablero.getNombre()
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(resultado);
+
+    } catch (SecurityException error) {
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+            .body(error.getMessage());
+
+    } catch (IllegalArgumentException error) {
+
+        return ResponseEntity.badRequest()
+            .body(error.getMessage());
+    }
+}
 }
