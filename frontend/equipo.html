@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Detalle del equipo | LuzioTeamTime</title>
+  <script src="js/api.js" defer></script>
+  <script src="js/equipo.js" defer></script>
+</head>
+<body>
+  <main>
+    <a href="equipos.html">Volver a Mis equipos</a>
+    <h1 id="nombre-equipo">Equipo</h1>
+    <p id="descripcion-equipo"></p>
+    <p id="mensaje" role="status"></p>
+
+    <section>
+      <h2>Integrantes</h2>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Nombre</th>
+            <th scope="col">Correo</th>
+            <th scope="col">Rol</th>
+          </tr>
+        </thead>
+        <tbody id="integrantes"></tbody>
+      </table>
+
+      <form id="formulario-integrante" hidden>
+        <label for="correo">Correo de la cuenta registrada</label>
+        <input id="correo" name="correo" type="email" required>
+        <button type="submit">Agregar colaborador</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Tableros</h2>
+      <ul id="tableros"></ul>
+
+      <form id="formulario-tablero" hidden>
+        <label for="nombre-tablero">Nombre del tablero</label>
+        <input id="nombre-tablero" name="nombre" required>
+        <button type="submit">Crear tablero</button>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

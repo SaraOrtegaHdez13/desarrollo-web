@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mis equipos | LuzioTeamTime</title>
+  <script src="js/api.js" defer></script>
+  <script src="js/equipos.js" defer></script>
+</head>
+<body>
+  <main>
+    <h1>Mis equipos</h1>
+    <button id="cerrar-sesion" type="button" disabled>Cerrar sesión</button>
+    <p id="mensaje" role="status"></p>
+
+    <section>
+      <h2>Crear equipo</h2>
+      <form id="formulario-equipo">
+        <label for="nombre">Nombre</label>
+        <input id="nombre" name="nombre" required>
+
+        <label for="descripcion">Descripción</label>
+        <textarea id="descripcion" name="descripcion"></textarea>
+
+        <button type="submit" disabled>Crear equipo</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Equipos activos</h2>
+      <ul id="equipos-activos"></ul>
+
+      <h2>Equipos archivados</h2>
+      <ul id="equipos-archivados"></ul>
+    </section>
+  </main>
+</body>
+</html>
