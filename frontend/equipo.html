@@ -13,6 +13,9 @@
     <h1 id="nombre-equipo">Equipo</h1>
     <p id="descripcion-equipo"></p>
     <p id="mensaje" role="status"></p>
+    <p id="estado-equipo"></p>
+    <p><a id="reporte-cumplimiento" hidden>Ver reporte de cumplimiento</a></p>
+    <button id="archivar-equipo" type="button" hidden>Archivar equipo</button>
 
     <section>
       <h2>Integrantes</h2>
@@ -22,6 +25,7 @@
             <th scope="col">Nombre</th>
             <th scope="col">Correo</th>
             <th scope="col">Rol</th>
+            <th scope="col">Acciones</th>
           </tr>
         </thead>
         <tbody id="integrantes"></tbody>
@@ -30,7 +34,12 @@
       <form id="formulario-integrante" hidden>
         <label for="correo">Correo de la cuenta registrada</label>
         <input id="correo" name="correo" type="email" required>
-        <button type="submit">Agregar colaborador</button>
+        <label for="rol-integrante">Rol</label>
+        <select id="rol-integrante" name="rol">
+          <option value="COLABORADOR">Colaborador</option>
+          <option value="LIDER">Líder</option>
+        </select>
+        <button type="submit">Agregar integrante</button>
       </form>
     </section>
 
