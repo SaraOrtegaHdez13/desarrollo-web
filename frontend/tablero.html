@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tablero | LuzioTeamTime</title>
+<script src="js/api.js" defer></script>
+<script src="js/acciones-tarea.js" defer></script>
+<script src="js/tablero.js" defer></script>
+</head>
+<body>
+  <main>
+    <a id="volver-equipo" href="equipos.html">Volver al equipo</a>
+    <h1 id="nombre-tablero">Tablero</h1>
+    <p id="mensaje" role="status"></p>
+
+    <section>
+      <h2>Tareas</h2>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Título</th>
+            <th scope="col">Responsable</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Fecha límite</th>
+            <th scope="col">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tareas"></tbody>
+      </table>
+    </section>
+
+    <section id="seccion-crear-tarea" hidden>
+      <h2>Crear tarea</h2>
+      <form id="formulario-tarea">
+        <label for="titulo">Título</label>
+        <input id="titulo" name="titulo" required>
+
+        <label for="descripcion">Descripción</label>
+        <textarea id="descripcion" name="descripcion" required></textarea>
+
+        <label for="fecha-limite">Fecha límite</label>
+        <input id="fecha-limite" name="fechaLimite" type="date" required>
+
+        <label for="responsable">Responsable</label>
+        <select id="responsable" name="idResponsable" required></select>
+
+        <button type="submit">Crear tarea</button>
+      </form>
+      <p id="sin-responsables" hidden>Agrega un colaborador al equipo para poder asignar una tarea.</p>
+    </section>
+  </main>
+</body>
+</html>
