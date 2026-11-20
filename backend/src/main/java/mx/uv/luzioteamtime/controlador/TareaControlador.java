@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PutMapping;
 import mx.uv.luzioteamtime.modelo.TareaModificacion;
+import mx.uv.luzioteamtime.modelo.TareaDetalle;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -151,21 +152,13 @@ public class TareaControlador {
                     .body("Debes iniciar sesión");
             }
 
-            // Consultar la tarea desde el servicio
-            Tarea tarea = tareaServicio.obtenerTarea(
-                id,
-                idUsuario
-            );
+            TareaDetalle detalle = tareaServicio.obtenerDetalleTarea(id, idUsuario);
 
-            // La tarea no existe
-            if (tarea == null) {
+            if (detalle == null) {
                 return ResponseEntity.notFound().build();
             }
 
-            // Convertir la tarea a una respuesta sencilla
-            TareaResumen resumen = new TareaResumen(tarea);
-
-            return ResponseEntity.ok(resumen);
+            return ResponseEntity.ok(detalle);
 
         } catch (SecurityException error) {
 

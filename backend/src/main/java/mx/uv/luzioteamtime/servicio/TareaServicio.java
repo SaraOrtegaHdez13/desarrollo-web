@@ -4,26 +4,27 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
 import org.springframework.transaction.annotation.Transactional;
-
 
 import mx.uv.luzioteamtime.repositorio.ITarea;
 import mx.uv.luzioteamtime.repositorio.ITablero;
 import mx.uv.luzioteamtime.repositorio.IUsuario;
 import mx.uv.luzioteamtime.repositorio.IMiembroEquipo;
-import mx.uv.luzioteamtime.modelo.AsignacionTarea;
 import mx.uv.luzioteamtime.repositorio.IAsignacionTarea;
-
-import java.time.LocalDate;
+import mx.uv.luzioteamtime.repositorio.ISesion;
+import mx.uv.luzioteamtime.repositorio.IRevisionTarea;
 
 import mx.uv.luzioteamtime.modelo.Tablero;
 import mx.uv.luzioteamtime.modelo.Tarea;
 import mx.uv.luzioteamtime.modelo.Usuario;
 import mx.uv.luzioteamtime.modelo.MiembroEquipo;
-
-import mx.uv.luzioteamtime.repositorio.ISesion;
+import mx.uv.luzioteamtime.modelo.TareaDetalle;
 import mx.uv.luzioteamtime.modelo.RevisionTarea;
-import mx.uv.luzioteamtime.repositorio.IRevisionTarea;
+import mx.uv.luzioteamtime.modelo.AsignacionTarea;
+
 
 @Service
 public class TareaServicio {
@@ -285,6 +286,72 @@ public class TareaServicio {
 
         // Devolver la tarea encontrada
         return tarea;
+    }
+
+    @Transactional(readOnly = true)
+    public TareaDetalle obtenerDetalleTarea(Integer idTarea, Integer idUsuario) {
+        Tarea tarea = obtenerTarea(idTarea, idUsuario);
+
+        if (tarea == null) {
+            return null;
+        }
+
+        List<TareaDetalle.Revision> revisiones = new ArrayList<>();
+
+        for (RevisionTarea evento : irevisionTarea.findByTarea_IdOrderByFechaAscIdAsc(idTarea)) {
+            String accion = evento.getAccion();
+
+            if ("ENTREGA".equals(accion)) {
+                revisiones.add(new TareaDetalle.Revision(
+                    revisiones.size() + 1,
+                    evento.getUsuario().getId(),
+                    evento.getFecha(),
+                    null,
+                    null,
+                    "PENDIENTE",
+                    null
+                ));
+                continue;
+            }
+
+            boolean esDecision = "APROBACION".equals(accion) || "RECHAZO".equals(accion);
+            if (!esDecision || revisiones.isEmpty()) {
+                continue;
+            }
+
+            int indice = revisiones.size() - 1;
+            TareaDetalle.Revision entrega = revisiones.get(indice);
+
+            if ("PENDIENTE".equals(entrega.resultado())) {
+                String resultado = "APROBACION".equals(accion) ? "APROBADA" : "RECHAZADA";
+
+                revisiones.set(indice, new TareaDetalle.Revision(
+                    entrega.numeroEntrega(),
+                    entrega.idEntregadoPor(),
+                    entrega.fechaEntrega(),
+                    evento.getUsuario().getId(),
+                    evento.getFecha(),
+                    resultado,
+                    evento.getObservacion()
+                ));
+            }
+        }
+
+        List<TareaDetalle.Asignacion> asignaciones =
+            iasignacionTarea.findByTarea_Id(idTarea).stream()
+                .sorted(Comparator.comparing(AsignacionTarea::getFechaInicio)
+                    .thenComparing(AsignacionTarea::getId))
+                .map(asignacion -> new TareaDetalle.Asignacion(
+                    asignacion.getUsuario().getId(),
+                    asignacion.getUsuario().getNombre(),
+                    asignacion.getFechaInicio(),
+                    asignacion.getFechaFin(),
+                    asignacion.getEstadoAlRecibir(),
+                    asignacion.getEstadoAlSalir()
+                ))
+                .toList();
+
+        return new TareaDetalle(tarea, revisiones, asignaciones);
     }
 
 
