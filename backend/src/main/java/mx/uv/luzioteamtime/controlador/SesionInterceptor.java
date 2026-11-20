@@ -12,7 +12,10 @@ public class SesionInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest solicitud, HttpServletResponse respuesta, Object controlador) throws Exception {
-
+        if (org.springframework.web.cors.CorsUtils.isPreFlightRequest(solicitud)) {
+            return true;
+        }
+        
         HttpSession sesion = solicitud.getSession(false);
 
         if (sesion == null || sesion.getAttribute("usuarioId") == null) {
