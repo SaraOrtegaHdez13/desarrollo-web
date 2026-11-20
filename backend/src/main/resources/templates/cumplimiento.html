@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reporte de cumplimiento | LuzioTeamTime</title>
+</head>
+<body>
+  <main>
+    <a th:href="|http://localhost:5500/equipo.html?id=${idEquipo}|">Volver al equipo</a>
+    <h1>Reporte de cumplimiento</h1>
+    <p th:text="${reporte.nombreEquipo()}"></p>
+
+    <form method="get" th:action="@{/equipos/{id}/cumplimiento(id=${idEquipo})}">
+      <label for="tablero">Tablero</label>
+      <select id="tablero" name="tablero">
+        <option value="">Todos los tableros</option>
+        <option th:each="opcion : ${reporte.tableros()}"
+                th:value="${opcion.id}"
+                th:text="${opcion.nombre}"
+                th:selected="${opcion.id == idTablero}"></option>
+      </select>
+      <button type="submit">Filtrar</button>
+    </form>
+
+    <table>
+      <caption>Resumen por integrante y equipo</caption>
+      <thead>
+        <tr>
+          <th scope="col">Integrante</th>
+          <th scope="col">Asignadas</th>
+          <th scope="col">Hechas (%)</th>
+          <th scope="col">Entregas a tiempo</th>
+          <th scope="col">Minutos de pomodoro</th>
+          <th scope="col">Aprobadas</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="persona : ${filas}">
+          <th scope="row">
+            <span th:text="${persona.nombre}"></span>
+            <small th:if="${persona.exIntegrante}"> (ex integrante)</small>
+          </th>
+          <td th:text="${persona.asignadas}"></td>
+          <td th:text="${#numbers.formatDecimal(persona.porcentaje, 1, 2)}"></td>
+          <td th:text="${persona.puntuales}"></td>
+          <td th:text="${#numbers.formatDecimal(persona.minutos, 1, 2)}"></td>
+          <td th:text="${persona.aprobadas}"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Historial por integrante</h2>
+    <section th:each="persona : ${reporte.integrantes()}">
+      <h3 th:text="${persona.nombre}"></h3>
+      <p th:if="${persona.historial.isEmpty()}">Sin entregas ni traspasos registrados.</p>
+      <ul th:unless="${persona.historial.isEmpty()}">
+        <li th:each="evento : ${persona.historial}" th:text="${evento}"></li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>
