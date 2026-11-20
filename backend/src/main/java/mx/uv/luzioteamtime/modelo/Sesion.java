@@ -33,8 +33,8 @@ public class Sesion {
 
     private LocalDateTime fin;
 
-    @Column(name = "duracion_minutos")
-    private Integer duracionMinutos;
+    @Column(name = "duracion_segundos")
+    private Integer duracionSegundos;
 
     public Sesion() {
 
@@ -45,13 +45,13 @@ public class Sesion {
         Usuario usuario,
         LocalDateTime inicio,
         LocalDateTime fin,
-        Integer duracionMinutos
+        Integer duracionSegundos
     ) {
         this.tarea = tarea;
         this.usuario = usuario;
         this.inicio = inicio;
         this.fin = fin;
-        this.duracionMinutos = duracionMinutos;
+        this.duracionSegundos = duracionSegundos;
     }
 
     public Integer getId() {
@@ -94,11 +94,11 @@ public class Sesion {
         this.fin = fin;
     }
 
-    public Integer getDuracionMinutos() {
-        return duracionMinutos;
+    public Integer getDuracionSegundos() {
+        return duracionSegundos;
     }
 
-    public void setDuracionMinutos(Integer duracionMinutos) {
-        this.duracionMinutos = duracionMinutos;
+    public void setDuracionSegundos(Integer duracionSegundos) {
+        this.duracionSegundos = duracionSegundos;
     }
 }

@@ -1,13 +1,13 @@
-
 package mx.uv.luzioteamtime.repositorio;
 
-import org.springframework.data.repository.CrudRepository;
+import java.util.List;
 
 import mx.uv.luzioteamtime.modelo.Sesion;
 
+import org.springframework.data.repository.CrudRepository;
+
 public interface ISesion extends CrudRepository<Sesion, Integer> {
 
-    // Contar las sesiones de pomodoro de una tarea
     long countByTarea_Id(Integer idTarea);
-
+    List<Sesion> findByTarea_Id(Integer idTarea);
 }
