@@ -8,6 +8,7 @@ import mx.uv.luzioteamtime.servicio.SesionServicio;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -52,9 +53,35 @@ public class SesionControlador {
         }
     }
 
+    // Consultar las sesiones de una tarea
+    @GetMapping("/obtenerSesiones/{idTarea}")
+    public ResponseEntity<?> obtenerSesiones(
+        @PathVariable("idTarea") Integer idTarea,
+        HttpSession sesion
+    ) {
+
+        Integer idUsuario = (Integer) sesion.getAttribute("usuarioId");
+
+        if (idUsuario == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("mensaje", "Inicia sesión."));
+        }
+
+        try {
+            return ResponseEntity.ok(
+                servicio.obtenerSesiones(idTarea, idUsuario)
+            );
+
+        } catch (ResponseStatusException error) {
+            return ResponseEntity.status(error.getStatusCode())
+                .body(Map.of("mensaje", error.getReason()));
+        }
+    }
+
     public record DatosSesion(
         LocalDateTime inicio,
         LocalDateTime fin,
         Integer duracionSegundos
     ) {}
+
 }
