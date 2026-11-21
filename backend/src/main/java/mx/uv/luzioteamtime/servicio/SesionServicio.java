@@ -2,6 +2,8 @@ package mx.uv.luzioteamtime.servicio;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 import mx.uv.luzioteamtime.modelo.Sesion;
 import mx.uv.luzioteamtime.modelo.Tarea;
@@ -72,4 +74,43 @@ public class SesionServicio {
             new Sesion(tarea, tarea.getResponsable(), inicio, fin, duracionSegundos)
         );
     }
+
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> obtenerSesiones(
+        Integer idTarea,
+        Integer idUsuario
+    ) {
+
+        // Verificar que el usuario tenga acceso a la tarea
+        try {
+            Tarea tarea = tareaServicio.obtenerTarea(idTarea, idUsuario);
+
+            if (tarea == null) {
+                throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "La tarea no existe."
+                );
+            }
+
+        } catch (SecurityException error) {
+            throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                error.getMessage()
+            );
+        }
+
+        // Obtener las sesiones registradas
+        return sesiones.findByTarea_Id(idTarea).stream()
+            .map(sesion -> Map.<String, Object>of(
+                "id", sesion.getId(),
+                "idTarea", sesion.getTarea().getId(),
+                "idUsuario", sesion.getUsuario().getId(),
+                "inicio", sesion.getInicio(),
+                "fin", sesion.getFin(),
+                "duracionSegundos", sesion.getDuracionSegundos()
+            ))
+            .toList();
+    }
+
 }

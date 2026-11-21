@@ -85,7 +85,7 @@ public class TareaServicio {
 
         if (titulo.trim().length() > 150) {
             throw new IllegalArgumentException(
-                "El título no puede superar 100 caracteres"
+                "El título no puede superar 150 caracteres"
             );
         }
 
@@ -399,7 +399,7 @@ public class TareaServicio {
 
         if (titulo.trim().length() > 150) {
             throw new IllegalArgumentException(
-                "El título no puede superar 100 caracteres"
+                "El título no puede superar 150 caracteres"
             );
         }
 
