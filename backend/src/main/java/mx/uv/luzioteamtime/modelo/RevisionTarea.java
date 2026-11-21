@@ -12,7 +12,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Column;
 
-// Historial de entregas y revisiones de una tarea
+// Registra cada entrega y su revisión dentro de una tarea
 @Entity
 @Table(name = "revisiones_tarea")
 public class RevisionTarea {
@@ -25,17 +25,28 @@ public class RevisionTarea {
     @JoinColumn(name = "id_tarea", nullable = false)
     private Tarea tarea;
 
+    @Column(name = "numero_entrega", nullable = false)
+    private Integer numeroEntrega;
+
     @ManyToOne
-    @JoinColumn(name = "id_usuario", nullable = false)
-    private Usuario usuario;
+    @JoinColumn(name = "id_entregado_por", nullable = false)
+    private Usuario entregadoPor;
+
+    @Column(name = "fecha_entrega", nullable = false)
+    private LocalDateTime fechaEntrega;
+
+    @ManyToOne
+    @JoinColumn(name = "id_revisor")
+    private Usuario revisor;
+
+    @Column(name = "fecha_revision")
+    private LocalDateTime fechaRevision;
 
     @Column(nullable = false, length = 20)
-    private String accion;
+    private String resultado;
 
-    @Column(length = 255)
+    @Column(length = 500)
     private String observacion;
-
-    private LocalDateTime fecha;
 
     public RevisionTarea() {
 
@@ -43,16 +54,22 @@ public class RevisionTarea {
 
     public RevisionTarea(
         Tarea tarea,
-        Usuario usuario,
-        String accion,
-        String observacion,
-        LocalDateTime fecha
+        Integer numeroEntrega,
+        Usuario entregadoPor,
+        LocalDateTime fechaEntrega,
+        Usuario revisor,
+        LocalDateTime fechaRevision,
+        String resultado,
+        String observacion
     ) {
         this.tarea = tarea;
-        this.usuario = usuario;
-        this.accion = accion;
+        this.numeroEntrega = numeroEntrega;
+        this.entregadoPor = entregadoPor;
+        this.fechaEntrega = fechaEntrega;
+        this.revisor = revisor;
+        this.fechaRevision = fechaRevision;
+        this.resultado = resultado;
         this.observacion = observacion;
-        this.fecha = fecha;
     }
 
     public Integer getId() {
@@ -71,20 +88,52 @@ public class RevisionTarea {
         this.tarea = tarea;
     }
 
-    public Usuario getUsuario() {
-        return usuario;
+    public Integer getNumeroEntrega() {
+        return numeroEntrega;
     }
 
-    public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
+    public void setNumeroEntrega(Integer numeroEntrega) {
+        this.numeroEntrega = numeroEntrega;
     }
 
-    public String getAccion() {
-        return accion;
+    public Usuario getEntregadoPor() {
+        return entregadoPor;
     }
 
-    public void setAccion(String accion) {
-        this.accion = accion;
+    public void setEntregadoPor(Usuario entregadoPor) {
+        this.entregadoPor = entregadoPor;
+    }
+
+    public LocalDateTime getFechaEntrega() {
+        return fechaEntrega;
+    }
+
+    public void setFechaEntrega(LocalDateTime fechaEntrega) {
+        this.fechaEntrega = fechaEntrega;
+    }
+
+    public Usuario getRevisor() {
+        return revisor;
+    }
+
+    public void setRevisor(Usuario revisor) {
+        this.revisor = revisor;
+    }
+
+    public LocalDateTime getFechaRevision() {
+        return fechaRevision;
+    }
+
+    public void setFechaRevision(LocalDateTime fechaRevision) {
+        this.fechaRevision = fechaRevision;
+    }
+
+    public String getResultado() {
+        return resultado;
+    }
+
+    public void setResultado(String resultado) {
+        this.resultado = resultado;
     }
 
     public String getObservacion() {
@@ -93,13 +142,5 @@ public class RevisionTarea {
 
     public void setObservacion(String observacion) {
         this.observacion = observacion;
-    }
-
-    public LocalDateTime getFecha() {
-        return fecha;
-    }
-
-    public void setFecha(LocalDateTime fecha) {
-        this.fecha = fecha;
     }
 }

@@ -51,7 +51,7 @@
     </table>
 
     <h2>Historial por integrante</h2>
-    <section th:each="persona : ${reporte.integrantes()}">
+    <section th:each="persona : ${filas}">
       <h3 th:text="${persona.nombre}"></h3>
       <p th:if="${persona.historial.isEmpty()}">Sin entregas ni traspasos registrados.</p>
       <ul th:unless="${persona.historial.isEmpty()}">

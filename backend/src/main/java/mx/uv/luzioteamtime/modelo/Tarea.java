@@ -29,10 +29,10 @@ public class Tarea {
     @JoinColumn(name = "id_responsable", nullable = false)
     private Usuario responsable;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 150)
     private String titulo;
 
-    @Column(length = 255)
+    @Column(length = 1000)
     private String descripcion;
 
     @Column(nullable = false, length = 20)
@@ -40,7 +40,7 @@ public class Tarea {
 
     private LocalDate fechaLimite;
 
-    @Column(length = 255)
+    @Column(length = 500)
     private String observacion;
 
     private LocalDateTime fechaCompletada;

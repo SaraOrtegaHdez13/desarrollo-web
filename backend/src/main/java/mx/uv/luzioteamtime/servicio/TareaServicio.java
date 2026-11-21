@@ -83,7 +83,7 @@ public class TareaServicio {
             );
         }
 
-        if (titulo.trim().length() > 100) {
+        if (titulo.trim().length() > 150) {
             throw new IllegalArgumentException(
                 "El título no puede superar 100 caracteres"
             );
@@ -289,7 +289,10 @@ public class TareaServicio {
     }
 
     @Transactional(readOnly = true)
-    public TareaDetalle obtenerDetalleTarea(Integer idTarea, Integer idUsuario) {
+    public TareaDetalle obtenerDetalleTarea(
+        Integer idTarea,
+        Integer idUsuario
+    ) {
         Tarea tarea = obtenerTarea(idTarea, idUsuario);
 
         if (tarea == null) {
@@ -298,49 +301,35 @@ public class TareaServicio {
 
         List<TareaDetalle.Revision> revisiones = new ArrayList<>();
 
-        for (RevisionTarea evento : irevisionTarea.findByTarea_IdOrderByFechaAscIdAsc(idTarea)) {
-            String accion = evento.getAccion();
+        List<RevisionTarea> entregas =
+            irevisionTarea.findByTarea_IdOrderByFechaEntregaAscIdAsc(
+                idTarea
+            );
 
-            if ("ENTREGA".equals(accion)) {
-                revisiones.add(new TareaDetalle.Revision(
-                    revisiones.size() + 1,
-                    evento.getUsuario().getId(),
-                    evento.getFecha(),
-                    null,
-                    null,
-                    "PENDIENTE",
-                    null
-                ));
-                continue;
+        for (RevisionTarea entrega : entregas) {
+
+            Integer idRevisor = null;
+
+            if (entrega.getRevisor() != null) {
+                idRevisor = entrega.getRevisor().getId();
             }
 
-            boolean esDecision = "APROBACION".equals(accion) || "RECHAZO".equals(accion);
-            if (!esDecision || revisiones.isEmpty()) {
-                continue;
-            }
-
-            int indice = revisiones.size() - 1;
-            TareaDetalle.Revision entrega = revisiones.get(indice);
-
-            if ("PENDIENTE".equals(entrega.resultado())) {
-                String resultado = "APROBACION".equals(accion) ? "APROBADA" : "RECHAZADA";
-
-                revisiones.set(indice, new TareaDetalle.Revision(
-                    entrega.numeroEntrega(),
-                    entrega.idEntregadoPor(),
-                    entrega.fechaEntrega(),
-                    evento.getUsuario().getId(),
-                    evento.getFecha(),
-                    resultado,
-                    evento.getObservacion()
-                ));
-            }
+            revisiones.add(new TareaDetalle.Revision(
+                entrega.getNumeroEntrega(),
+                entrega.getEntregadoPor().getId(),
+                entrega.getFechaEntrega(),
+                idRevisor,
+                entrega.getFechaRevision(),
+                entrega.getResultado(),
+                entrega.getObservacion()
+            ));
         }
 
         List<TareaDetalle.Asignacion> asignaciones =
             iasignacionTarea.findByTarea_Id(idTarea).stream()
-                .sorted(Comparator.comparing(AsignacionTarea::getFechaInicio)
-                    .thenComparing(AsignacionTarea::getId))
+                .sorted(Comparator.comparing(
+                    AsignacionTarea::getFechaInicio
+                ).thenComparing(AsignacionTarea::getId))
                 .map(asignacion -> new TareaDetalle.Asignacion(
                     asignacion.getUsuario().getId(),
                     asignacion.getUsuario().getNombre(),
@@ -408,7 +397,7 @@ public class TareaServicio {
             );
         }
 
-        if (titulo.trim().length() > 100) {
+        if (titulo.trim().length() > 150) {
             throw new IllegalArgumentException(
                 "El título no puede superar 100 caracteres"
             );
@@ -534,6 +523,7 @@ public class TareaServicio {
     }
 
 
+    
     // B10: Enviar una tarea a revisión
     @Transactional
     public Tarea enviarTareaRevision(
@@ -582,22 +572,32 @@ public class TareaServicio {
             );
         }
 
-        // Cambiar el estado de la tarea
-        tarea.setEstado("EN_REVISION");
-        Tarea tareaGuardada = itarea.save(tarea);
+        // Calcular el número de la nueva entrega
+        Integer numeroEntrega =
+            (int) irevisionTarea.countByTarea_Id(idTarea) + 1;
 
-        // Registrar la entrega en el historial
+        // Registrar la fecha de entrega
+        LocalDateTime fechaEntrega = LocalDateTime.now();
+
+        // Crear el registro de entrega pendiente
         RevisionTarea revision = new RevisionTarea(
-            tareaGuardada,
+            tarea,
+            numeroEntrega,
             usuario,
-            "ENTREGA",
+            fechaEntrega,
             null,
-            LocalDateTime.now()
+            null,
+            "PENDIENTE",
+            null
         );
 
+        // Guardar la entrega
         irevisionTarea.save(revision);
 
-        return tareaGuardada;
+        // Cambiar el estado de la tarea
+        tarea.setEstado("EN_REVISION");
+
+        return itarea.save(tarea);
     }
 
 
@@ -648,7 +648,7 @@ public class TareaServicio {
             );
         }
 
-        // Obtener al usuario que aprueba
+        // Buscar al usuario que aprueba
         Usuario usuario = iusuario.findById(idUsuario).orElse(null);
 
         if (usuario == null) {
@@ -657,32 +657,48 @@ public class TareaServicio {
             );
         }
 
-        // Registrar la fecha de aprobación
+        // Obtener la última entrega pendiente
+        List<RevisionTarea> entregas =
+            irevisionTarea.findByTarea_IdOrderByFechaEntregaAscIdAsc(
+                idTarea
+            );
+
+        RevisionTarea entregaPendiente = null;
+
+        for (RevisionTarea entrega : entregas) {
+            if ("PENDIENTE".equals(entrega.getResultado())) {
+                entregaPendiente = entrega;
+            }
+        }
+
+        if (entregaPendiente == null) {
+            throw new IllegalStateException(
+                "No se encontró una entrega pendiente de revisión"
+            );
+        }
+
+        // Registrar los datos de la revisión
         LocalDateTime fecha = LocalDateTime.now();
+
+        entregaPendiente.setRevisor(usuario);
+        entregaPendiente.setFechaRevision(fecha);
+        entregaPendiente.setResultado("APROBADA");
+        entregaPendiente.setObservacion(null);
+
+        irevisionTarea.save(entregaPendiente);
 
         // Marcar la tarea como terminada
         tarea.setEstado("HECHA");
         tarea.setFechaCompletada(fecha);
         tarea.setObservacion(null);
 
-        Tarea tareaGuardada = itarea.save(tarea);
-
-        // Guardar la aprobación en el historial
-        RevisionTarea revision = new RevisionTarea(
-            tareaGuardada,
-            usuario,
-            "APROBACION",
-            null,
-            fecha
-        );
-
-        irevisionTarea.save(revision);
-
-        return tareaGuardada;
+        return itarea.save(tarea);
     }
 
 
+
     // B12: Rechazar una tarea y solicitar correcciones
+
     @Transactional
     public Tarea rechazarTarea(
         Integer idTarea,
@@ -740,10 +756,10 @@ public class TareaServicio {
             );
         }
 
-        // La columna de observación permite hasta 255 caracteres
-        if (observacion.trim().length() > 255) {
+        // Validar la longitud de la observación
+        if (observacion.trim().length() > 500) {
             throw new IllegalArgumentException(
-                "La observación no puede superar 255 caracteres"
+                "La observación no puede superar 500 caracteres"
             );
         }
 
@@ -756,29 +772,43 @@ public class TareaServicio {
             );
         }
 
-        // Registrar la fecha del rechazo
+        // Obtener la última entrega pendiente
+        List<RevisionTarea> entregas =
+            irevisionTarea.findByTarea_IdOrderByFechaEntregaAscIdAsc(
+                idTarea
+            );
+
+        RevisionTarea entregaPendiente = null;
+
+        for (RevisionTarea entrega : entregas) {
+            if ("PENDIENTE".equals(entrega.getResultado())) {
+                entregaPendiente = entrega;
+            }
+        }
+
+        if (entregaPendiente == null) {
+            throw new IllegalStateException(
+                "No se encontró una entrega pendiente de revisión"
+            );
+        }
+
+        // Registrar los datos del rechazo
         LocalDateTime fecha = LocalDateTime.now();
+
+        entregaPendiente.setRevisor(usuario);
+        entregaPendiente.setFechaRevision(fecha);
+        entregaPendiente.setResultado("RECHAZADA");
+        entregaPendiente.setObservacion(observacion.trim());
+
+        irevisionTarea.save(entregaPendiente);
 
         // Devolver la tarea a progreso
         tarea.setEstado("EN_PROGRESO");
         tarea.setObservacion(observacion.trim());
-        tarea.setFechaCompletada(null);
 
-        Tarea tareaGuardada = itarea.save(tarea);
-
-        // Guardar el rechazo en el historial
-        RevisionTarea revision = new RevisionTarea(
-            tareaGuardada,
-            usuario,
-            "RECHAZO",
-            observacion.trim(),
-            fecha
-        );
-
-        irevisionTarea.save(revision);
-
-        return tareaGuardada;
+        return itarea.save(tarea);
     }
+
 
     // B13: Reasignar una tarea conservando su historial
     @Transactional
@@ -935,13 +965,8 @@ public class TareaServicio {
 
         iasignacionTarea.save(asignacionActual);
 
-        // Actualizar el responsable de la tarea
+        // Actualizar el responsable sin modificar el estado
         tarea.setResponsable(nuevoResponsable);
-
-        // Reiniciar el trabajo para el nuevo responsable
-        tarea.setEstado("POR_HACER");
-        tarea.setObservacion(null);
-        tarea.setFechaCompletada(null);
 
         Tarea tareaGuardada = itarea.save(tarea);
 
@@ -951,7 +976,7 @@ public class TareaServicio {
             nuevoResponsable,
             fecha,
             null,
-            "POR_HACER",
+            tareaGuardada.getEstado(),
             null
         );
 

@@ -68,57 +68,79 @@ public class CumplimientoServicio {
 
         Fila total = new Fila("Total del equipo", false);
 
+        
         for (var tablero : opciones) {
-            boolean incluido = idTablero == null || idTablero.equals(tablero.getId());
+
+            boolean incluido = idTablero == null
+                || idTablero.equals(tablero.getId());
+
+            // Ignorar tableros que no fueron seleccionados
+            if (!incluido) {
+                continue;
+            }
 
             for (var tarea : tareas.findByTablero_Id(tablero.getId())) {
-                var detalle = detalleTareas.obtenerDetalleTarea(tarea.getId(), idUsuario);
 
+                var detalle = detalleTareas.obtenerDetalleTarea(
+                    tarea.getId(), idUsuario
+                );
+
+                // Registrar el historial de asignaciones
                 for (var asignacion : detalle.getAsignaciones()) {
+
                     Fila anterior = personas.computeIfAbsent(
                         asignacion.idUsuario(),
                         id -> new Fila(asignacion.nombre(), true)
                     );
 
-                    if (incluido && asignacion.fechaFin() != null) {
+                    if (asignacion.fechaFin() != null) {
                         anterior.historial.add(
-                            tarea.getTitulo() + " · Traspasada en " + asignacion.estadoAlSalir()
+                            tarea.getTitulo() + " · Traspasada en "
+                            + asignacion.estadoAlSalir()
                         );
                     }
                 }
 
-                if (!incluido) {
-                    continue;
-                }
-
+                // Contabilizar las tareas
                 if (tarea.getResponsable() != null) {
+
                     boolean hecha = "HECHA".equals(tarea.getEstado());
+
                     boolean puntual = hecha
                         && tarea.getFechaCompletada() != null
                         && tarea.getFechaLimite() != null
                         && !tarea.getFechaCompletada().toLocalDate()
                             .isAfter(tarea.getFechaLimite());
 
-                    filaDe(personas, tarea.getResponsable()).contar(hecha, puntual);
+                    filaDe(personas, tarea.getResponsable())
+                        .contar(hecha, puntual);
+
                     total.contar(hecha, puntual);
                 }
 
+                // Registrar el historial de entregas
                 for (var revision : detalle.getRevisiones()) {
+
                     Fila autor = personas.get(revision.idEntregadoPor());
 
                     if (autor != null) {
+
                         String observacion = revision.observacion() == null
                             ? "" : " · " + revision.observacion();
 
                         autor.historial.add(
-                            tarea.getTitulo() + " · Entrega " + revision.numeroEntrega()
-                            + " · " + revision.fechaEntrega() + " · "
-                            + revision.resultado() + observacion
+                            tarea.getTitulo() + " · Entrega "
+                            + revision.numeroEntrega()
+                            + " · " + revision.fechaEntrega()
+                            + " · " + revision.resultado()
+                            + observacion
                         );
                     }
                 }
 
+                // Sumar las sesiones de Pomodoro
                 for (var sesion : sesiones.findByTarea_Id(tarea.getId())) {
+
                     Integer segundos = sesion.getDuracionSegundos();
 
                     if (segundos != null) {
@@ -128,6 +150,7 @@ public class CumplimientoServicio {
                 }
             }
         }
+
 
         List<TableroResumen> resumenTableros = opciones.stream()
             .map(tablero -> new TableroResumen(tablero.getId(), idEquipo, tablero.getNombre()))
