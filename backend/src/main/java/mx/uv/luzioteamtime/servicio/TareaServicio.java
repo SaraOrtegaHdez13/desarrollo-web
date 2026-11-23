@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,6 +50,12 @@ public class TareaServicio {
 
     @Autowired
     private IRevisionTarea irevisionTarea;
+
+    private void validarFechaLimite(LocalDate fechaLimite) {
+        if (fechaLimite != null && fechaLimite.isBefore(LocalDate.now(ZoneId.of("America/Mexico_City")))) {
+            throw new IllegalArgumentException("La fecha límite debe ser hoy o una fecha posterior.");
+        }
+    }
 
     // B4: Crear una tarea en un tablero
     // Guardar la tarea y su asignación como una sola operación
@@ -161,6 +168,8 @@ public class TareaServicio {
             }
         }
 
+        validarFechaLimite(fechaLimite);
+
         // Crear la tarea con su estado inicial
         Tarea tarea = new Tarea(
             tablero,
@@ -263,10 +272,14 @@ public class TareaServicio {
     
     // B6: Obtener una tarea por su ID
     public Tarea obtenerTarea(Integer idTarea, Integer idUsuario) {
+        return verificarAcceso(itarea.findById(idTarea).orElse(null), idUsuario);
+    }
 
-        // Buscar la tarea
-        Tarea tarea = itarea.findById(idTarea).orElse(null);
+    public Tarea obtenerTareaParaActualizar(Integer idTarea, Integer idUsuario) {
+        return verificarAcceso(itarea.buscarParaActualizar(idTarea).orElse(null), idUsuario);
+    }
 
+    private Tarea verificarAcceso(Tarea tarea, Integer idUsuario) {
         if (tarea == null) {
             return null;
         }
@@ -316,7 +329,7 @@ public class TareaServicio {
 
             revisiones.add(new TareaDetalle.Revision(
                 entrega.getNumeroEntrega(),
-                entrega.getEntregadoPor().getId(),
+                entrega.getEntregadoPor() == null ? null : entrega.getEntregadoPor().getId(),
                 entrega.getFechaEntrega(),
                 idRevisor,
                 entrega.getFechaRevision(),
@@ -401,6 +414,10 @@ public class TareaServicio {
             throw new IllegalArgumentException(
                 "El título no puede superar 150 caracteres"
             );
+        }
+
+        if (!java.util.Objects.equals(fechaLimite, tarea.getFechaLimite())) {
+            validarFechaLimite(fechaLimite);
         }
 
         // Actualizar los datos permitidos
@@ -532,7 +549,7 @@ public class TareaServicio {
     ) {
 
         // Buscar la tarea
-        Tarea tarea = itarea.findById(idTarea).orElse(null);
+        Tarea tarea = itarea.buscarParaActualizar(idTarea).orElse(null);
 
         if (tarea == null) {
             return null;

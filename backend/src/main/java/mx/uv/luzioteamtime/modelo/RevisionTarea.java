@@ -25,14 +25,14 @@ public class RevisionTarea {
     @JoinColumn(name = "id_tarea", nullable = false)
     private Tarea tarea;
 
-    @Column(name = "numero_entrega", nullable = false)
+    @Column(name = "numero_entrega")
     private Integer numeroEntrega;
 
     @ManyToOne
-    @JoinColumn(name = "id_entregado_por", nullable = false)
+    @JoinColumn(name = "id_entregado_por")
     private Usuario entregadoPor;
 
-    @Column(name = "fecha_entrega", nullable = false)
+    @Column(name = "fecha_entrega")
     private LocalDateTime fechaEntrega;
 
     @ManyToOne
@@ -42,7 +42,7 @@ public class RevisionTarea {
     @Column(name = "fecha_revision")
     private LocalDateTime fechaRevision;
 
-    @Column(nullable = false, length = 20)
+    @Column(length = 20)
     private String resultado;
 
     @Column(length = 500)
