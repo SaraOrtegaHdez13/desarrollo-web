@@ -36,7 +36,7 @@ public class SesionServicio {
         Tarea tarea;
 
         try {
-            tarea = tareaServicio.obtenerTarea(idTarea, idUsuario);
+            tarea = tareaServicio.obtenerTareaParaActualizar(idTarea, idUsuario);
         } catch (SecurityException error) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, error.getMessage());
         }
@@ -56,17 +56,24 @@ public class SesionServicio {
             );
         }
 
-        if (!"EN_PROGRESO".equals(tarea.getEstado())) {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST, "La tarea debe estar en progreso."
-            );
-        }
-
         if (inicio == null || fin == null || duracionSegundos == null
             || duracionSegundos <= 0
             || !Duration.between(inicio, fin).equals(Duration.ofSeconds(duracionSegundos))) {
             throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST, "El inicio, el fin y la duración no coinciden."
+            );
+        }
+
+        var existente = sesiones.findFirstByTarea_IdAndUsuario_IdAndInicioAndFinAndDuracionSegundosOrderByIdAsc(
+            idTarea, idUsuario, inicio, fin, duracionSegundos
+        );
+        if (existente.isPresent()) {
+            return existente.get();
+        }
+
+        if (!"EN_PROGRESO".equals(tarea.getEstado())) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST, "La tarea debe estar en progreso."
             );
         }
 
