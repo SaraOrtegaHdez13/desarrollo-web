@@ -1,54 +1,343 @@
-<!doctype html>
-<html lang="es">
+<!DOCTYPE html>
+<html lang="es-MX">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Tablero | LuzioTeamTime</title>
-<script src="js/api.js" defer></script>
-<script src="js/acciones-tareas.js" defer></script>
-<script src="js/tablero.js" defer></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tablero — LuzioTeamTime</title>
+  <link rel="stylesheet" href="css/estilos.css" />
 </head>
 <body>
-  <main>
-    <a id="volver-equipo" href="equipos.html">Volver al equipo</a>
-    <h1 id="nombre-tablero">Tablero</h1>
-    <p id="mensaje" role="status"></p>
+  <div class="app-shell">
+    <!-- Barra lateral compacta UV Nocturno -->
+    <aside class="sidebar" aria-label="Navegación principal">
+      <div>
+        <a href="equipos.html" class="brand-header">
+          <span class="brand-uv-mark" aria-hidden="true">
+            <span></span>
+            <span></span>
+          </span>
+          <span>LuzioTeamTime</span>
+        </a>
+        <div class="brand-subtag">
+          <svg class="icon-svg icon-svg-sm" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+          <span>Edición UV · Modo Nocturno</span>
+        </div>
 
-    <section>
-      <h2>Tareas</h2>
-      <table>
-        <thead>
-          <tr>
-            <th scope="col">Título</th>
-            <th scope="col">Responsable</th>
-            <th scope="col">Estado</th>
-            <th scope="col">Fecha límite</th>
-            <th scope="col">Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="tareas"></tbody>
-      </table>
-    </section>
+        <nav aria-label="Secciones de la aplicación">
+          <ul class="nav-list">
+            <li>
+              <a href="equipos.html" class="nav-link">
+                <svg class="icon-svg icon-svg-sm" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                <span>Mis equipos</span>
+              </a>
+            </li>
+            <li>
+              <a id="enlace-equipo" href="equipos.html" class="nav-link">
+                <svg class="icon-svg icon-svg-sm" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                <span>Detalle de equipo</span>
+              </a>
+            </li>
+            <li>
+              <a id="nav-tablero" href="#" class="nav-link is-active" aria-current="page">
+                <svg class="icon-svg icon-svg-sm" viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <path d="M9 3v18" />
+                  <path d="M15 3v18" />
+                </svg>
+                <span>Tablero</span>
+              </a>
+            </li>
+            <li id="nav-detalle" hidden><span class="nav-link is-active" aria-current="page">Detalle y Pomodoro</span></li>
+            <li><a id="nav-reporte" class="nav-link" hidden>Reporte de cumplimiento</a></li>
+          </ul>
+        </nav>
+      </div>
 
-    <section id="seccion-crear-tarea" hidden>
-      <h2>Crear tarea</h2>
-      <form id="formulario-tarea">
-        <label for="titulo">Título</label>
-        <input id="titulo" name="titulo" required>
+      <div class="sidebar-footer">
+        <div class="sidebar-user-name">
+          <svg class="icon-svg icon-svg-sm" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+          <span id="usuario-actual">Cargando usuario...</span>
+        </div>
+        <div class="sidebar-user-meta"></div>
+        <button id="cerrar-sesion" type="button" class="btn btn-ghost btn-sm btn-block">
+          <svg class="icon-svg icon-svg-sm" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+          <span>Cerrar sesión</span>
+        </button>
+      </div>
+    </aside>
 
-        <label for="descripcion">Descripción</label>
-        <textarea id="descripcion" name="descripcion" required></textarea>
+    <!-- Área principal -->
+    <main class="main-area">
+      <header id="cabecera-tablero" class="page-header">
+        <div>
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <h1 id="nombre-tablero" class="page-title">Cargando tablero...</h1>
+            <span id="contexto-equipo" class="badge badge-todo">Equipo</span>
+          </div>
+          <p class="page-subtitle">Las transiciones de estado se realizan mediante acciones explícitas por rol.</p>
+        </div>
 
-        <label for="fecha-limite">Fecha límite</label>
-        <input id="fecha-limite" name="fechaLimite" type="date" required>
+        <div class="header-actions">
+          <button id="mostrar-nueva-tarea" type="button" class="btn btn-primary" aria-expanded="false" aria-controls="seccion-crear-tarea" hidden>Nueva tarea</button>
+          <a id="reporte-tablero" class="btn btn-secondary" hidden>Reporte de cumplimiento</a>
+          <a id="volver-equipo" href="equipos.html" class="btn btn-ghost">
+            <svg class="icon-svg icon-svg-sm" viewBox="0 0 24 24" aria-hidden="true">
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+            <span>Volver al equipo</span>
+          </a>
+        </div>
+      </header>
 
-        <label for="responsable">Responsable</label>
-        <select id="responsable" name="idResponsable" required></select>
+      <div id="mensaje" class="banner banner-info" role="status" aria-live="polite"></div>
 
-        <button type="submit">Crear tarea</button>
-      </form>
-      <p id="sin-responsables" hidden>Agrega un colaborador al equipo para poder asignar una tarea.</p>
-    </section>
-  </main>
+      <!-- Formulario de nueva tarea (visible para líder en equipo activo) -->
+      <section id="seccion-crear-tarea" hidden class="card" aria-labelledby="titulo-nueva-tarea" style="margin-bottom: 22px;">
+        <div class="card-header">
+          <h2 id="titulo-nueva-tarea" class="card-title">
+            <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            <span>Nueva tarea</span>
+          </h2>
+        </div>
+
+        <form id="formulario-tarea" method="post">
+          <div class="two-col-grid" style="gap: 16px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="titulo">Título de la tarea</label>
+              <input id="titulo" name="titulo" class="form-control" type="text" required placeholder="Ej. Validar registro de sesiones" />
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="responsable">Responsable</label>
+              <select id="responsable" name="idResponsable" class="form-control" required></select>
+            </div>
+          </div>
+
+          <div class="two-col-grid" style="gap: 16px; margin-top: 14px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="descripcion">Descripción</label>
+              <textarea id="descripcion" name="descripcion" required class="form-control" rows="2" placeholder="Detalles y criterios de aceptación..."></textarea>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="fecha-limite">Fecha límite</label>
+              <input id="fecha-limite" name="fechaLimite" class="form-control" type="date" required />
+            </div>
+          </div>
+
+          <p id="sin-responsables" class="field-hint" hidden>Agrega integrantes elegibles para asignar tareas.</p>
+
+          <div style="margin-top: 16px; display: flex; justify-content: flex-end;">
+            <button type="submit" class="btn btn-primary">
+              <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              <span>Crear tarea</span>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Barra de filtros del tablero -->
+      <section id="filtros-tareas" class="card" aria-label="Filtros de tareas" style="margin-bottom: 18px; padding: 16px 20px;">
+        <div class="filters-bar">
+          <div class="filter-field">
+            <label class="form-label" for="filtro-estado" style="display: flex; align-items: center; gap: 6px; font-size: 13px;">
+              <svg class="icon-svg icon-svg-sm" viewBox="0 0 24 24" aria-hidden="true">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+              </svg>
+              <span>Filtrar por estado</span>
+            </label>
+            <select id="filtro-estado" class="form-control">
+              <option value="">Todos los estados</option>
+              <option value="POR_HACER">Por hacer</option>
+              <option value="EN_PROGRESO">En progreso</option>
+              <option value="EN_REVISION">En revisión</option>
+              <option value="HECHA">Hecha</option>
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label class="form-label" for="filtro-responsable" style="display: flex; align-items: center; gap: 6px; font-size: 13px;">
+              <svg class="icon-svg icon-svg-sm" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              <span>Filtrar por responsable</span>
+            </label>
+            <select id="filtro-responsable" class="form-control">
+              <option value="">Todos los integrantes</option>
+            </select>
+          </div>
+
+          <div>
+            <button id="limpiar-filtros" type="button" class="btn btn-secondary">
+              <svg class="icon-svg icon-svg-sm" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
+              </svg>
+              <span>Limpiar filtros</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Lista de tareas del tablero -->
+      <section id="listado-tareas" aria-labelledby="titulo-lista-tareas" style="margin-bottom: 28px;">
+        <div class="card-header">
+          <h2 id="titulo-lista-tareas" class="card-title">
+            <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M9 3v18" />
+              <path d="M15 3v18" />
+            </svg>
+            <span>Tareas del tablero</span>
+          </h2>
+        </div>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Tareas del tablero">
+          <table class="data-table">
+            <thead><tr><th scope="col">Tarea</th><th scope="col">Responsable</th><th scope="col">Estado</th><th scope="col">Fecha límite</th><th scope="col">Acciones</th></tr></thead>
+            <tbody id="tareas"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Detalle de tarea seleccionada + Temporizador Pomodoro (Arquitectura D) -->
+      <section id="seccion-detalle" aria-labelledby="titulo-detalle" hidden>
+        <div class="actions-row detalle-toolbar">
+          <button id="volver-listado" type="button" class="btn btn-secondary btn-sm">← Volver al tablero</button>
+          <label for="inspeccionar-tarea">Inspeccionar tarea</label>
+          <select id="inspeccionar-tarea" class="form-control"></select>
+        </div>
+        <div class="detail-layout">
+          <!-- Columna izquierda: Temporizador Pomodoro -->
+          <div id="panel-pomodoro" class="card">
+            <div class="card-header">
+              <h2 class="card-title">
+                <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                <span>Temporizador Pomodoro</span>
+              </h2>
+              <span id="fase-pomodoro" class="badge badge-progress">Trabajo (25:00)</span>
+            </div>
+
+            <div class="field-hint">
+              Tarea vinculada: <strong id="pomodoro-tarea" style="color: var(--text-primary);">—</strong>
+            </div>
+
+            <div id="reloj-pomodoro" class="pomo-display" aria-label="Tiempo restante">25:00</div>
+
+            <div class="pomo-progress-track" aria-hidden="true">
+              <div id="pomodoro-barra" class="pomo-progress-bar" style="width: 0%;"></div>
+            </div>
+
+            <div id="mensaje-pomodoro" class="banner banner-info" role="status" aria-live="polite" style="font-size: 13.5px; margin-bottom: 14px;">
+              Listo para iniciar bloque de trabajo.
+            </div>
+
+            <p id="pomodoro-bloqueado" class="field-hint" hidden>El temporizador está disponible para la persona responsable cuando la tarea está en progreso y el equipo está activo.</p>
+            <div id="pomodoro-controles" class="pomo-controles" hidden>
+              <button id="iniciar-pomodoro" type="button" class="btn btn-primary">
+                <svg class="icon-svg icon-svg-sm" viewBox="0 0 24 24" aria-hidden="true">
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+                <span>Iniciar trabajo (25:00)</span>
+              </button>
+              <button id="iniciar-descanso" type="button" class="btn btn-accent" disabled>Iniciar descanso (05:00)</button>
+              <button id="reintentar-pomodoro" type="button" class="btn btn-primary" hidden>Reintentar guardado</button>
+              <button id="cancelar-pomodoro" type="button" class="btn btn-danger" hidden>
+                <svg class="icon-svg icon-svg-sm" viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="6" y="6" width="12" height="12" rx="2" />
+                </svg>
+                <span>Cancelar temporizador</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Columna derecha: Información de tarea, acciones e historial -->
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <span id="detalle-estado" class="badge badge-todo">Estado</span>
+                  <h2 id="titulo-detalle" class="page-title" style="margin-top: 8px; font-size: 21px;">Detalle de tarea</h2>
+                </div>
+                <div id="detalle-acciones" class="actions-row"></div>
+              </div>
+
+              <p id="detalle-descripcion" style="margin: 0 0 16px; color: var(--text-primary);"></p>
+
+              <dl class="meta-grid">
+                <div>
+                  <dt>Responsable</dt>
+                  <dd id="detalle-responsable">—</dd>
+                </div>
+                <div>
+                  <dt>Fecha límite</dt>
+                  <dd id="detalle-fecha-limite" class="tabular-nums">—</dd>
+                </div>
+                <div>
+                  <dt>Minutos Pomodoro</dt>
+                  <dd id="detalle-minutos" class="tabular-nums">0 min</dd>
+                </div>
+                <div><dt>Entrega / Aprobación</dt><dd id="detalle-entrega">—</dd></div>
+              </dl>
+              <p id="detalle-observacion" class="banner banner-danger" hidden></p>
+
+
+
+              <!-- Formulario inline de rechazo -->
+
+              <!-- Formulario inline de reasignación -->
+              <form id="form-reasignacion" method="post" hidden style="border-top: 1px solid var(--border-color); padding-top: 14px; margin-top: 10px;">
+                <div class="form-group">
+                  <label class="form-label" for="nuevo-responsable">Nuevo responsable</label>
+                  <select id="nuevo-responsable" name="idResponsable" class="form-control" required></select>
+                </div>
+                <div class="actions-row">
+                  <button type="submit" class="btn btn-primary btn-sm">Guardar reasignación</button>
+                  <button id="cancelar-reasignacion" type="button" class="btn btn-secondary btn-sm">Cancelar</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="card">
+              <h3 class="card-title" style="margin-bottom: 14px;">Historial de entregas, revisiones y asignaciones</h3>
+              <div id="detalle-historial"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/pomodoro.js"></script>
+  <script src="js/acciones-tareas.js"></script>
+  <script src="js/tablero.js"></script>
 </body>
 </html>
