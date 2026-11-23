@@ -119,11 +119,8 @@ DROP TABLE IF EXISTS `revisiones_tarea`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `revisiones_tarea` (
   `id` int NOT NULL,
-  `accion` varchar(20) NOT NULL,
-  `fecha` datetime(6) DEFAULT NULL,
   `observacion` varchar(500) DEFAULT NULL,
   `id_tarea` int NOT NULL,
-  `id_usuario` int NOT NULL,
   `fecha_entrega` datetime(6) NOT NULL,
   `fecha_revision` datetime(6) DEFAULT NULL,
   `numero_entrega` int NOT NULL,
@@ -132,10 +129,8 @@ CREATE TABLE `revisiones_tarea` (
   `id_revisor` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `FKg2tls3l9qfysmn85kf19a6yb` (`id_tarea`),
-  KEY `FK2132rtvdbb07hwrwqop2r0ko` (`id_usuario`),
   KEY `FK6m60rpky3kajgw9so4pkpwdn7` (`id_entregado_por`),
   KEY `FKpdu43ns32tchsahjyj2f875yp` (`id_revisor`),
-  CONSTRAINT `FK2132rtvdbb07hwrwqop2r0ko` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id`),
   CONSTRAINT `FK6m60rpky3kajgw9so4pkpwdn7` FOREIGN KEY (`id_entregado_por`) REFERENCES `usuarios` (`id`),
   CONSTRAINT `FKg2tls3l9qfysmn85kf19a6yb` FOREIGN KEY (`id_tarea`) REFERENCES `tareas` (`id`),
   CONSTRAINT `FKpdu43ns32tchsahjyj2f875yp` FOREIGN KEY (`id_revisor`) REFERENCES `usuarios` (`id`)
@@ -305,4 +300,4 @@ CREATE TABLE `usuarios_seq` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-11-20 22:29:34
+-- Dump completed on 2026-11-22 22:58:23
