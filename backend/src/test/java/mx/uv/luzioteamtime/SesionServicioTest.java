@@ -72,7 +72,7 @@ class SesionServicioTest {
     // 1. Guardar una sesión correctamente.
     @Test
     void guardarSesionCorrectamente() {
-        when(tareaServicio.obtenerTarea(3, 10)).thenReturn(tarea);
+        when(tareaServicio.obtenerTareaParaActualizar(3, 10)).thenReturn(tarea);
 
         when(sesiones.save(any(Sesion.class)))
             .thenAnswer(peticion -> peticion.getArgument(0));
@@ -91,10 +91,23 @@ class SesionServicioTest {
         verify(sesiones).save(any(Sesion.class));
     }
 
+    @Test
+    void reintentarDevuelveLaSesionExistenteAunqueYaEsteEnRevision() {
+        tarea.setEstado("EN_REVISION");
+        Sesion existente = new Sesion(tarea, usuario, inicio, fin, 1500);
+        when(tareaServicio.obtenerTareaParaActualizar(3, 10)).thenReturn(tarea);
+        when(sesiones.findFirstByTarea_IdAndUsuario_IdAndInicioAndFinAndDuracionSegundosOrderByIdAsc(
+            3, 10, inicio, fin, 1500
+        )).thenReturn(java.util.Optional.of(existente));
+
+        assertSame(existente, servicio.guardar(3, 10, inicio, fin, 1500));
+        verify(sesiones, never()).save(any(Sesion.class));
+    }
+
     // 2. Tarea inexistente.
     @Test
     void guardarSesionTareaInexistente() {
-        when(tareaServicio.obtenerTarea(3, 10)).thenReturn(null);
+        when(tareaServicio.obtenerTareaParaActualizar(3, 10)).thenReturn(null);
 
         ResponseStatusException error = assertThrows(
             ResponseStatusException.class,
@@ -108,7 +121,7 @@ class SesionServicioTest {
     // 3. Usuario sin permiso.
     @Test
     void guardarSesionSinPermiso() {
-        when(tareaServicio.obtenerTarea(3, 10))
+        when(tareaServicio.obtenerTareaParaActualizar(3, 10))
             .thenThrow(new SecurityException("No tienes permiso."));
 
         ResponseStatusException error = assertThrows(
@@ -125,7 +138,7 @@ class SesionServicioTest {
     void guardarSesionEquipoArchivado() {
         tarea.getTablero().getEquipo().setArchivado(true);
 
-        when(tareaServicio.obtenerTarea(3, 10)).thenReturn(tarea);
+        when(tareaServicio.obtenerTareaParaActualizar(3, 10)).thenReturn(tarea);
 
         ResponseStatusException error = assertThrows(
             ResponseStatusException.class,
@@ -145,7 +158,7 @@ class SesionServicioTest {
         otroUsuario.setId(20);
         tarea.setResponsable(otroUsuario);
 
-        when(tareaServicio.obtenerTarea(3, 10)).thenReturn(tarea);
+        when(tareaServicio.obtenerTareaParaActualizar(3, 10)).thenReturn(tarea);
 
         ResponseStatusException error = assertThrows(
             ResponseStatusException.class,
@@ -161,7 +174,7 @@ class SesionServicioTest {
     void guardarSesionTareaNoEstaEnProgreso() {
         tarea.setEstado("POR_HACER");
 
-        when(tareaServicio.obtenerTarea(3, 10)).thenReturn(tarea);
+        when(tareaServicio.obtenerTareaParaActualizar(3, 10)).thenReturn(tarea);
 
         ResponseStatusException error = assertThrows(
             ResponseStatusException.class,
@@ -175,7 +188,7 @@ class SesionServicioTest {
     // 7. Duración que no coincide con el intervalo.
     @Test
     void guardarSesionDuracionIncorrecta() {
-        when(tareaServicio.obtenerTarea(3, 10)).thenReturn(tarea);
+        when(tareaServicio.obtenerTareaParaActualizar(3, 10)).thenReturn(tarea);
 
         ResponseStatusException error = assertThrows(
             ResponseStatusException.class,
@@ -189,7 +202,7 @@ class SesionServicioTest {
     // 8. Duración nula.
     @Test
     void guardarSesionDuracionNula() {
-        when(tareaServicio.obtenerTarea(3, 10)).thenReturn(tarea);
+        when(tareaServicio.obtenerTareaParaActualizar(3, 10)).thenReturn(tarea);
 
         ResponseStatusException error = assertThrows(
             ResponseStatusException.class,
