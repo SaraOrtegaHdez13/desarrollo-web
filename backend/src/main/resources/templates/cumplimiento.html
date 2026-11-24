@@ -1,63 +1,249 @@
-<!doctype html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html>
+<html lang="es-MX" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Reporte de cumplimiento | LuzioTeamTime</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reporte de cumplimiento — LuzioTeamTime</title>
+  <link rel="stylesheet" th:href="@{/css/estilos.css}" href="/css/estilos.css" />
 </head>
 <body>
-  <main>
-    <a th:href="|http://localhost:5500/equipo.html?id=${idEquipo}|">Volver al equipo</a>
-    <h1>Reporte de cumplimiento</h1>
-    <p th:text="${reporte.nombreEquipo()}"></p>
+  <div class="app-shell">
+    <!-- Barra lateral compacta UV Nocturno -->
+    <aside class="sidebar" aria-label="Navegación principal">
+      <div>
+        <a href="http://localhost:5500/equipos.html" class="brand-header">
+          <span class="brand-uv-mark" aria-hidden="true">
+            <span></span>
+            <span></span>
+          </span>
+          <span>LuzioTeamTime</span>
+        </a>
+        <div class="brand-subtag">
+          <svg class="icon-svg icon-svg-sm" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+          <span>Edición UV · Modo Nocturno</span>
+        </div>
 
-    <form method="get" th:action="@{/equipos/{id}/cumplimiento(id=${idEquipo})}">
-      <label for="tablero">Tablero</label>
-      <select id="tablero" name="tablero">
-        <option value="">Todos los tableros</option>
-        <option th:each="opcion : ${reporte.tableros()}"
-                th:value="${opcion.id}"
-                th:text="${opcion.nombre}"
-                th:selected="${opcion.id == idTablero}"></option>
-      </select>
-      <button type="submit">Filtrar</button>
-    </form>
+        <nav aria-label="Secciones de la aplicación">
+          <ul class="nav-list">
+            <li>
+              <a href="http://localhost:5500/equipos.html" class="nav-link">
+                <svg class="icon-svg icon-svg-sm" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                <span>Mis equipos</span>
+              </a>
+            </li>
+            <li>
+              <a th:href="|http://localhost:5500/equipo.html?id=${idEquipo}|" class="nav-link">
+                <svg class="icon-svg icon-svg-sm" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                <span>Detalle de equipo</span>
+              </a>
+            </li>
+            <li>
+              <a href="#" class="nav-link is-active" aria-current="page">
+                <svg class="icon-svg icon-svg-sm" viewBox="0 0 24 24" aria-hidden="true">
+                  <line x1="18" y1="20" x2="18" y2="10" />
+                  <line x1="12" y1="20" x2="12" y2="4" />
+                  <line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
+                <span>Reporte de cumplimiento</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
 
-    <table>
-      <caption>Resumen por integrante y equipo</caption>
-      <thead>
-        <tr>
-          <th scope="col">Integrante</th>
-          <th scope="col">Asignadas</th>
-          <th scope="col">Hechas (%)</th>
-          <th scope="col">Entregas a tiempo</th>
-          <th scope="col">Minutos de pomodoro</th>
-          <th scope="col">Aprobadas</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr th:each="persona : ${filas}">
-          <th scope="row">
-            <span th:text="${persona.nombre}"></span>
-            <small th:if="${persona.exIntegrante}"> (ex integrante)</small>
-          </th>
-          <td th:text="${persona.asignadas}"></td>
-          <td th:text="${#numbers.formatDecimal(persona.porcentaje, 1, 2)}"></td>
-          <td th:text="${persona.puntuales}"></td>
-          <td th:text="${#numbers.formatDecimal(persona.minutos, 1, 2)}"></td>
-          <td th:text="${persona.aprobadas}"></td>
-        </tr>
-      </tbody>
-    </table>
+      <div class="sidebar-footer">
+        <div class="sidebar-user-name">
+          <svg class="icon-svg icon-svg-sm" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+          <span th:text="${reporte.nombreUsuario()}">Usuario</span>
+        </div>
+        <div class="sidebar-user-meta"
+             th:text="${reporte.nombreEquipo() + ' · ' + (reporte.rolUsuario() == 'LIDER' ? 'Líder' : 'Colaborador') + (reporte.archivado() ? ' · Solo lectura' : '')}"></div>
+        <a th:href="|http://localhost:5500/equipo.html?id=${idEquipo}|" class="btn btn-ghost btn-sm btn-block">
+          <svg class="icon-svg icon-svg-sm" viewBox="0 0 24 24" aria-hidden="true">
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+          <span>Volver al equipo</span>
+        </a>
+        <button id="cerrar-sesion-reporte" type="button" class="btn btn-secondary btn-sm btn-block">
+          <svg class="icon-svg icon-svg-sm" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 21H5V3h4 M16 7l5 5-5 5 M21 12H9" />
+          </svg>
+          <span>Cerrar sesión</span>
+        </button>
+        <p id="error-sesion-reporte" class="field-hint" role="status" hidden></p>
+      </div>
+    </aside>
 
-    <h2>Historial por integrante</h2>
-    <section th:each="persona : ${filas}">
-      <h3 th:text="${persona.nombre}"></h3>
-      <p th:if="${persona.historial.isEmpty()}">Sin entregas ni traspasos registrados.</p>
-      <ul th:unless="${persona.historial.isEmpty()}">
-        <li th:each="evento : ${persona.historial}" th:text="${evento}"></li>
-      </ul>
-    </section>
-  </main>
+    <!-- Área principal -->
+    <main class="main-area">
+      <header class="page-header">
+        <div>
+          <h1 class="page-title">
+            <svg class="icon-svg icon-svg-lg" viewBox="0 0 24 24" aria-hidden="true">
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
+            </svg>
+            <span>Reporte de cumplimiento — <span th:text="${reporte != null ? reporte.nombreEquipo() : 'Equipo'}">Proyecto LISTI</span></span>
+          </h1>
+          <p class="page-subtitle">Métricas consolidadas por integrante, puntualidad de entrega y minutos Pomodoro registrados.</p>
+        </div>
+
+        <!-- Filtro por tablero (Todos los tableros o específico) -->
+        <form method="get" th:action="@{/equipos/{id}/cumplimiento(id=${idEquipo})}" class="filters-bar" style="align-items: flex-end;">
+          <div>
+            <label class="form-label" for="tableroId" style="display: flex; align-items: center; gap: 5px; font-size: 13px; margin-bottom: 4px;">
+              <svg class="icon-svg icon-svg-sm" viewBox="0 0 24 24" aria-hidden="true">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+              </svg>
+              <span>Filtrar por tablero</span>
+            </label>
+            <select id="tableroId" name="tablero" class="form-control" onchange="this.form.submit()">
+              <option value="" th:selected="${idTablero == null}">Todos los tableros</option>
+              <option th:each="t : ${reporte.tableros()}"
+                      th:value="${t.id}"
+                      th:text="${t.nombre}"
+                      th:selected="${idTablero != null and idTablero == t.id}">
+                Entrega 4
+              </option>
+            </select>
+          </div>
+          <noscript>
+            <button type="submit" class="btn btn-primary btn-sm">Aplicar</button>
+          </noscript>
+        </form>
+      </header>
+
+      <div class="banner banner-info" style="font-size: 13.5px;">
+        <span style="display: flex; align-items: flex-start; gap: 8px;">
+          <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+          </svg>
+          <span>
+            <strong>Nota metodológica (RN-12):</strong> El porcentaje de cumplimiento corresponde a <em>Tareas aprobadas / Tareas asignadas</em>.
+            La columna <em>Entregas a tiempo</em> se muestra como dato ilustrativo mientras se distingue en backend la fecha de entrega frente a la fecha de aprobación.
+            Los minutos Pomodoro se atribuyen a la persona que ejecutó cada sesión.
+          </span>
+        </span>
+      </div>
+
+      <!-- Tabla principal de métricas por integrante -->
+      <section class="card" aria-labelledby="titulo-tabla-reporte" style="margin-bottom: 24px;">
+        <div class="card-header">
+          <h2 id="titulo-tabla-reporte" class="card-title">Resumen por integrante</h2>
+        </div>
+
+        <div th:if="${reporte == null or #lists.isEmpty(filas)}" class="field-hint">
+          No hay registros de actividad para el tablero seleccionado.
+        </div>
+
+        <div class="table-wrap" th:if="${reporte != null and !#lists.isEmpty(filas)}">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Integrante</th>
+                <th class="num-col">Asignadas</th>
+                <th class="num-col">Aprobadas</th>
+                <th class="num-col">% Hechas</th>
+                <th class="num-col">Entregas a tiempo (ilustrativo)</th>
+                <th class="num-col">Minutos Pomodoro</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="fila : ${reporte.integrantes()}">
+                <td>
+                  <strong th:text="${fila.nombre}">Integrante</strong>
+                  <span class="field-hint" th:if="${fila.rol != null}"
+                        th:text="${fila.rol == 'LIDER' ? '(Líder)' : '(Colaborador)'}"></span>
+                  <span th:if="${fila.exIntegrante}" class="badge badge-readonly" style="margin-left: 6px;">Ex integrante</span>
+                </td>
+                <td class="num-col" th:text="${fila.asignadas}">0</td>
+                <td class="num-col" th:text="${fila.aprobadas}">0</td>
+                <td class="num-col"><strong th:text="${#numbers.formatDecimal(fila.porcentaje, 1, 0)} + '%'">0%</strong></td>
+                <td class="num-col" th:text="${fila.puntuales}">0</td>
+                <td class="num-col" th:text="${#numbers.formatDecimal(fila.minutos, 1, (fila.minutos % 1 == 0 ? 0 : 1))} + ' min'">0 min</td>
+              </tr>
+            </tbody>
+            <tfoot class="cumplimiento-total" th:with="total=${reporte.total()}">
+              <tr>
+                <th scope="row">Total del equipo</th>
+                <td class="num-col" th:text="${total.asignadas}"></td>
+                <td class="num-col" th:text="${total.aprobadas}"></td>
+                <td class="num-col" th:text="${#numbers.formatDecimal(total.porcentaje, 1, 0)} + '%'"></td>
+                <td class="num-col" th:text="${total.puntuales}"></td>
+                <td class="num-col" th:text="${#numbers.formatDecimal(total.minutos, 1, (total.minutos % 1 == 0 ? 0 : 1))} + ' min'"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </section>
+
+      <!-- Historial de entregas, observaciones y traspasos -->
+      <div class="two-col-grid cumplimiento-historial">
+        <section class="card" aria-labelledby="titulo-entregas">
+          <h2 class="card-title" id="titulo-entregas">Historial de entregas y observaciones</h2>
+          <p class="field-hint" th:if="${reporte.entregas().isEmpty()}">Sin registros para el filtro actual.</p>
+          <ul class="timeline" th:unless="${reporte.entregas().isEmpty()}">
+            <li class="timeline-item" th:each="evento : ${reporte.entregas()}"
+                th:classappend="${evento.estado() == 'RECHAZADA' ? 'is-rejection' : (evento.estado() == 'APROBADA' ? 'is-approved' : '')}">
+              <div class="timeline-meta" th:text="${evento.fecha() == null ? 'Sin fecha registrada' : #temporals.format(evento.fecha(), 'dd MMM yyyy HH:mm')}"></div>
+              <div class="timeline-title" th:text="${evento.titulo()}"></div>
+              <div th:text="${evento.descripcion()}"></div>
+              <div class="timeline-meta" th:if="${evento.revision() != null}"
+                   th:text="'Revisada: ' + ${#temporals.format(evento.revision(), 'dd MMM yyyy HH:mm')}"></div>
+              <div class="timeline-obs" th:if="${evento.observacion() != null}" th:text="${evento.observacion()}"></div>
+            </li>
+          </ul>
+        </section>
+        <section class="card" aria-labelledby="titulo-traspasos">
+          <h2 class="card-title" id="titulo-traspasos">Historial de traspasos de tareas</h2>
+          <p class="field-hint" th:if="${reporte.traspasos().isEmpty()}">Sin registros para el filtro actual.</p>
+          <ul class="timeline" th:unless="${reporte.traspasos().isEmpty()}">
+            <li class="timeline-item" th:each="evento : ${reporte.traspasos()}"
+                th:classappend="${evento.estado() == 'RECHAZADA' ? 'is-rejection' : (evento.estado() == 'APROBADA' ? 'is-approved' : '')}">
+              <div class="timeline-meta" th:text="${evento.fecha() == null ? 'Sin fecha registrada' : #temporals.format(evento.fecha(), 'dd MMM yyyy HH:mm')}"></div>
+              <div class="timeline-title" th:text="${evento.titulo()}"></div>
+              <div th:text="${evento.descripcion()}"></div>
+              <div class="timeline-meta" th:if="${evento.revision() != null}"
+                   th:text="'Revisada: ' + ${#temporals.format(evento.revision(), 'dd MMM yyyy HH:mm')}"></div>
+              <div class="timeline-obs" th:if="${evento.observacion() != null}" th:text="${evento.observacion()}"></div>
+            </li>
+          </ul>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script>
+    const salirReporte = document.getElementById('cerrar-sesion-reporte');
+    salirReporte.addEventListener('click', async () => {
+        salirReporte.disabled = true;
+        const aviso = document.getElementById('error-sesion-reporte');
+        aviso.hidden = true;
+        try {
+            const respuesta = await fetch('/cerrarSesion', { method: 'POST' });
+            if (!respuesta.ok && respuesta.status !== 401) throw new Error();
+            location.replace('http://localhost:5500/index.html');
+        } catch {
+            aviso.textContent = 'No se pudo cerrar la sesión. Intenta de nuevo.';
+            aviso.hidden = false;
+            salirReporte.disabled = false;
+        }
+    });
+  </script>
 </body>
 </html>
